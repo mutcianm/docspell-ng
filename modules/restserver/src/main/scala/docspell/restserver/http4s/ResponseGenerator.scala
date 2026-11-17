@@ -22,7 +22,7 @@ trait ResponseGenerator[F[_]] {
         w1: EntityEncoder[F, B]
     ): F[Response[F]] =
       e.fold(
-        a => UnprocessableEntity(a),
+        a => UnprocessableContent(a),
         b => Ok(b)
       ).map(_.withHeaders(headers: _*))
   }

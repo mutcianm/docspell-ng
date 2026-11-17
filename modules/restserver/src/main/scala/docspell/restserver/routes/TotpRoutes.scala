@@ -47,7 +47,7 @@ object TotpRoutes {
           result <- backend.totp.initialize(user.account)
           resp <- result match {
             case OTotp.InitResult.AlreadyExists =>
-              UnprocessableEntity(
+              UnprocessableContent(
                 BasicResult(success = false, "A totp setup already exists!")
               )
             case OTotp.InitResult.NotFound =>
