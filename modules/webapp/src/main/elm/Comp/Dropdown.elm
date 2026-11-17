@@ -33,7 +33,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Simple.Fuzzy
-import Util.Html exposing (onKeyUp)
+import Util.Html exposing (menuRoot, onKeyUp)
 import Util.List
 
 
@@ -515,9 +515,11 @@ viewSingle2 cfg settings model =
             List.head model.selected
     in
     div
-        [ class "relative "
-        , onKeyUp KeyPress
-        ]
+        ([ class "relative ds-menu-keys"
+         , onKeyUp KeyPress
+         ]
+            ++ menuRoot model.menuOpen (ShowMenu False)
+        )
         [ div
             [ class cfg.style.link
             ]
@@ -615,9 +617,11 @@ viewMultiple2 cfg settings model =
                 ]
     in
     div
-        [ class "relative"
-        , onKeyUp KeyPress
-        ]
+        ([ class "relative ds-menu-keys"
+         , onKeyUp KeyPress
+         ]
+            ++ menuRoot model.menuOpen (ShowMenu False)
+        )
         [ div
             [ class cfg.style.link
             , class "flex inline-flex flex-wrap items-center"

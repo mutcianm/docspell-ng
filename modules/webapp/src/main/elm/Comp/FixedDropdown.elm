@@ -20,7 +20,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Styles as S
-import Util.Html exposing (KeyCode(..), onKeyUpCode)
+import Util.Html exposing (KeyCode(..), menuRoot, onKeyUpCode)
 import Util.List
 
 
@@ -194,9 +194,11 @@ viewStyled2 cfg error sel model =
                 |> Maybe.withDefault (span [ class "hidden" ] [])
     in
     div
-        [ class ("relative " ++ cfg.style.root)
-        , onKeyUpCode KeyPress
-        ]
+        ([ class ("relative " ++ cfg.style.root)
+         , onKeyUpCode KeyPress
+         ]
+            ++ menuRoot model.menuOpen ToggleMenu
+        )
         [ a
             [ class cfg.style.link
             , classList [ ( S.inputErrorBorder, error ) ]

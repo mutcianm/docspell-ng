@@ -178,7 +178,8 @@ view texts settings dds model =
         viewSettings =
             tagSettings texts.placeholder dds
     in
-    div [ class "flex flex-col" ]
+    -- the category filter belongs to the menu: clicking it must not close it
+    div [ class "flex flex-col ds-menu-scope" ]
         [ viewCategorySelect texts settings model
         , Html.map DropdownMsg (Comp.Dropdown.view2 viewSettings settings model.ddm)
         ]

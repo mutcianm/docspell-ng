@@ -21,6 +21,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Styles as S
+import Util.Html
 
 
 type Item msg
@@ -227,7 +228,7 @@ makeDropdown model =
             else
                 menuLink m
     in
-    div [ class "relative" ]
+    div (class "relative" :: Util.Html.menuRoot model.menuOpen model.toggleMenu)
         [ a
             [ classList model.linkClass
             , class "block"

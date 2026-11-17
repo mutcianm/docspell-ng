@@ -36,6 +36,7 @@ import Page.ShareDetail.View as ShareDetail
 import Page.Upload.View2 as Upload
 import Page.UserSettings.View2 as UserSettings
 import Styles as S
+import Util.Html
 
 
 view : Model -> List (Html Msg)
@@ -247,9 +248,11 @@ langMenu model =
                 ]
     in
     div
-        [ class "relative"
-        , classList [ ( "hidden", List.length Messages.UiLanguage.all == 1 ) ]
-        ]
+        ([ class "relative"
+         , classList [ ( "hidden", List.length Messages.UiLanguage.all == 1 ) ]
+         ]
+            ++ Util.Html.menuRoot model.langMenuOpen ToggleLangMenu
+        )
         [ a
             [ class dropdownLink
             , onClick ToggleLangMenu
@@ -267,7 +270,7 @@ langMenu model =
 
 dataMenu : Texts -> AuthResult -> Model -> Html Msg
 dataMenu texts _ model =
-    div [ class "relative" ]
+    div (class "relative" :: Util.Html.menuRoot model.navMenuOpen ToggleNavMenu)
         [ a
             [ class dropdownLink
             , class "inline-block relative"
@@ -380,7 +383,7 @@ dataMenu texts _ model =
 
 userMenu : Texts -> AuthResult -> Model -> Html Msg
 userMenu texts acc model =
-    div [ class "relative" ]
+    div (class "relative" :: Util.Html.menuRoot model.userMenuOpen ToggleUserMenu)
         [ a
             [ class dropdownLink
             , onClick ToggleUserMenu
