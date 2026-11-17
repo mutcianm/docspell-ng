@@ -3047,8 +3047,8 @@ paths:
         Profile precedence: path segment, then `statsProfile` in the
         JSON body, then `full`.
 
-        | Profile | count | tagCloud | fieldStats | folderStats | dimension lists | fieldCount etc. |
-        |---------|-------|----------|------------|-------------|-----------------|-----------------|
+        | Profile | count | tagCloud, tagCategoryCloud | fieldStats | folderStats | dimension lists | fieldCount etc. |
+        |---------|-------|----------------------------|------------|-------------|-----------------|-----------------|
         | full | yes | yes | yes | yes | yes | no |
         | general | yes | yes | empty | empty | empty | yes |
         | fields | yes | empty | yes | empty | empty | no |

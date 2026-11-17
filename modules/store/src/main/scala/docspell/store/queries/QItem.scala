@@ -367,6 +367,8 @@ object QItem extends FtsSupport {
       folderIdsOpt = Some(folderIds)
       count <- searchCountSummary(today, ftsTable, folderIdsOpt)(q)
       tags <- searchTagSummary(today, ftsTable)(q)
+      // the search menu builds its tag category list from this profile
+      cats <- searchTagCategorySummary(today, ftsTable)(q)
       fieldCount <- QItemFieldStats.searchFieldDefinitionCountForQuery(
         q.fix,
         today,
@@ -381,7 +383,7 @@ object QItem extends FtsSupport {
     } yield SearchSummary(
       count = count,
       tags = tags,
-      cats = Nil,
+      cats = cats,
       fields = Nil,
       folders = Nil,
       corrOrgs = Nil,

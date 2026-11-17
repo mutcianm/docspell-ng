@@ -27,6 +27,7 @@ class SearchStatsTest extends DatabaseTest {
     for {
       cid <- prepareItems(store)
       _ <- prepareCustomFields(store, cid, Ident.unsafe("item-0"))
+      _ <- prepareTag(store, cid, Ident.unsafe("item-0"))
       today <- IO(LocalDate.now())
       account <- store
         .transact(QLogin.findAccount(DocspellSystem.account))
@@ -39,6 +40,8 @@ class SearchStatsTest extends DatabaseTest {
       assertEquals(general.fields, Nil)
       assertEquals(general.folders, Nil)
       assertEquals(general.corrOrgs, Nil)
+      assertEquals(general.cats.map(_.category), List(Some("finance")))
+      assertEquals(general.cats, full.cats)
       assert(general.fieldCount.isDefined)
       assertEquals(general.fieldCount.get, 1)
       assert(general.orgCount.isDefined)
@@ -58,6 +61,16 @@ class SearchStatsTest extends DatabaseTest {
       assert(general.count == full.count)
     }
   }
+
+  private def prepareTag(store: Store[IO], cid: CollectiveId, itemId: Ident) =
+    for {
+      now <- Timestamp.current[IO]
+      tag = RTag(Ident.unsafe("tag-0"), cid, "invoice", Some("finance"), now)
+      _ <- store.transact(RTag.insert(tag))
+      _ <- store.transact(
+        RTagItem.insert(RTagItem(Ident.unsafe("ti-0"), itemId, tag.tagId))
+      )
+    } yield ()
 
   private def prepareItems(store: Store[IO]): IO[CollectiveId] =
     for {
