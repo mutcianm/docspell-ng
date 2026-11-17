@@ -28,11 +28,12 @@ object PdfExtract {
   def get[F[_]: Async: Files](
       in: Stream[F, Byte],
       lang: Language,
-      stripMinLen: Int,
+      pdfCfg: PdfConfig,
       ocrCfg: OcrConfig,
       logger: Logger[F]
   ): F[Either[Throwable, Result]] = {
 
+    val stripMinLen = pdfCfg.minTextLen
     val runOcr =
       TextExtract.extractOCR(in, logger, lang.iso3, ocrCfg).compile.lastOrError
 
@@ -63,7 +64,22 @@ object PdfExtract {
           ) >> runOcr.map(txt => Result(txt, None)).attempt,
         pair =>
           if (pair._1.length >= stripMinLen && stripMinLen > 0)
-            Result(pair).pure[F].attempt
+            TextLayerCheck.garbled(pair._1.raw, lang, pdfCfg) match {
+              case None         => Result(pair).pure[F].attempt
+              case Some(reason) =>
+                // a garbled layer is never better, so take OCR even if it is shorter
+                logger.info(
+                  s"Stripped text from PDF looks garbled: $reason. Using OCR."
+                ) *>
+                  runOcr.attempt.flatMap {
+                    case Right(txt) => Result(txt, pair._2).pure[F]
+                    case Left(ex) =>
+                      logger.warn(
+                        s"OCR failed, keeping garbled text: ${ex.getMessage}"
+                      ) *>
+                        Result(pair).pure[F]
+                  }.attempt
+            }
           else
             logger
               .info(

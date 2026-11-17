@@ -46,7 +46,7 @@ object Extraction {
         TikaMimetype.resolve(dataType, data).flatMap {
           case MimeType.PdfMatch(_) =>
             PdfExtract
-              .get(data, lang, cfg.pdf.minTextLen, cfg.ocr, logger)
+              .get(data, lang, cfg.pdf, cfg.ocr, logger)
               .map(ExtractResult.fromEitherResult)
 
           case PoiType(mt) =>
