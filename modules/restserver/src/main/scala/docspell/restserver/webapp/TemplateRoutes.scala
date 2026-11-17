@@ -95,22 +95,25 @@ object TemplateRoutes {
   object IndexData {
     private[this] val uiVersion = 2
 
+    // the asset path only has the version; this forces reloading after every new build
+    private[this] val buildParam = s"?v=${BuildInfo.builtAtMillis}"
+
     def apply(cfg: Config): IndexData =
       IndexData(
         Flags(cfg, uiVersion),
         chooseUi,
         Seq(
           "/app/assets" + Webjars.clipboardjs + "/clipboard.min.js",
-          s"/app/assets/docspell-webapp/${BuildInfo.version}/docspell-app.js",
-          s"/app/assets/docspell-webapp/${BuildInfo.version}/docspell-query-opt.js"
+          s"/app/assets/docspell-webapp/${BuildInfo.version}/docspell-app.js$buildParam",
+          s"/app/assets/docspell-webapp/${BuildInfo.version}/docspell-query-opt.js$buildParam"
         ),
         s"/app/assets/docspell-webapp/${BuildInfo.version}/favicon",
-        s"/app/assets/docspell-webapp/${BuildInfo.version}/docspell.js",
+        s"/app/assets/docspell-webapp/${BuildInfo.version}/docspell.js$buildParam",
         Flags(cfg, uiVersion).asJson.spaces2
       )
 
     private def chooseUi: Seq[String] =
-      Seq(s"/app/assets/docspell-webapp/${BuildInfo.version}/css/styles.css")
+      Seq(s"/app/assets/docspell-webapp/${BuildInfo.version}/css/styles.css$buildParam")
 
     implicit def yamuscaValueConverter: ValueConverter[IndexData] =
       deriveValueConverter[IndexData]
