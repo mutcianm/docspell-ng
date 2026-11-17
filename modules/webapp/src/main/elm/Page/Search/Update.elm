@@ -125,7 +125,10 @@ update texts bookmarkId lastViewedItemId env msg model =
                     }
 
                 result =
-                    if nextState.stateChange && not model.searchInProgress then
+                    if nextState.stateChange && model.searchInProgress then
+                        resultModelCmd env.selectedItems ( { newModel | searchQueued = Just BasicSearch }, Cmd.none )
+
+                    else if nextState.stateChange then
                         doSearch env.selectedItems searchParam newModel
 
                     else
@@ -220,6 +223,7 @@ update texts bookmarkId lastViewedItemId env msg model =
 
                       else
                         \next -> makeResult env.selectedItems ( next, Cmd.none, Sub.none )
+                    , runQueuedSearch texts bookmarkId lastViewedItemId env
                     ]
                     m
 
@@ -247,12 +251,7 @@ update texts bookmarkId lastViewedItemId env msg model =
                 )
 
         ItemSearchResp _ (Err _) ->
-            resultModelCmd env.selectedItems
-                ( { model
-                    | searchInProgress = False
-                  }
-                , Cmd.none
-                )
+            runQueuedSearch texts bookmarkId lastViewedItemId env { model | searchInProgress = False }
 
         DoSearch stype ->
             let
@@ -269,7 +268,7 @@ update texts bookmarkId lastViewedItemId env msg model =
                     }
             in
             if model.searchInProgress then
-                resultModelCmd env.selectedItems ( model, Cmd.none )
+                resultModelCmd env.selectedItems ( { model | searchQueued = Just stype }, Cmd.none )
 
             else
                 doSearch env.selectedItems param nm
@@ -1213,6 +1212,19 @@ doSearchMore env model =
     ( { model | moreInProgress = True }
     , cmd
     )
+
+
+{-| Searches requested while another one was in flight are not dropped: the last one
+is run once the in-flight search finished, using the then current search state.
+-}
+runQueuedSearch : Texts -> Maybe String -> Maybe String -> Env.Update -> Model -> UpdateResult
+runQueuedSearch texts bookmarkId lastViewedItemId env model =
+    case model.searchQueued of
+        Just stype ->
+            update texts bookmarkId lastViewedItemId env (DoSearch stype) { model | searchQueued = Nothing }
+
+        Nothing ->
+            resultModelCmd env.selectedItems ( model, Cmd.none )
 
 
 resultModelCmd : ItemIds -> ( Model, Cmd Msg ) -> UpdateResult

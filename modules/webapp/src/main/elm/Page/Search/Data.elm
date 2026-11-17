@@ -59,6 +59,7 @@ type alias Model =
     { searchMenuModel : Comp.SearchMenu.Model
     , itemListModel : Comp.ItemCardList.Model
     , searchInProgress : Bool
+    , searchQueued : Maybe SearchType
     , viewMode : ViewMode
     , searchOffset : Int
     , moreAvailable : Bool
@@ -130,6 +131,7 @@ init flags viewMode =
     { searchMenuModel = searchMenuModel
     , itemListModel = Comp.ItemCardList.init
     , searchInProgress = False
+    , searchQueued = Nothing
     , searchOffset = 0
     , moreAvailable = True
     , moreInProgress = False
