@@ -138,10 +138,10 @@ object AttachmentRoutes {
 
       case GET -> Root / Ident(id) / "view" =>
         // this route exists to provide a stable url
-        // it redirects currently to viewerjs
+        // it redirects currently to the pdf.js viewer
         val attachUrl = s"/api/v1/sec/attachment/${id.id}"
         val path =
-          s"/app/assets${Webjars.pdfjsdistviewermin}/build/minified/web/viewer.html?file=$attachUrl"
+          s"/app/assets${Webjars.pdfjs}/web/viewer.html?file=$attachUrl"
         SeeOther(Location(Uri(path = Uri.Path.unsafeFromString(path))))
 
       case GET -> Root / Ident(id) / "meta" =>

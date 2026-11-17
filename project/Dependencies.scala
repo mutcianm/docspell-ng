@@ -36,7 +36,7 @@ object Dependencies {
   val MUnitVersion = "1.2.0"
   val MUnitCatsEffectVersion = "2.1.0"
   val PdfboxVersion = "3.0.8"
-  val PdfjsViewerVersion = "2.12.313"
+  val PdfjsVersion = "5.4.530"
   val PoiVersion = "5.5.1"
   val PostgresVersion = "42.7.14"
   val PureConfigVersion = "0.17.9"
@@ -335,7 +335,7 @@ object Dependencies {
   val webjars = Seq(
     "org.webjars" % "swagger-ui" % SwaggerUIVersion,
     "org.webjars" % "clipboard.js" % ClipboardJsVersion,
-    "org.webjars.npm" % "pdfjs-dist-viewer-min" % PdfjsViewerVersion
+    "org.webjars" % "pdf-js" % PdfjsVersion
   )
 
   val icu4j = Seq(
