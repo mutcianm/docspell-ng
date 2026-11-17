@@ -14,7 +14,7 @@ mkdir -p "$cache"
 
 docker build -t docspell-ng-builder -f docker/Dockerfile.builder docker
 docker run --rm --user "$(id -u):$(id -g)" \
-  -e HOME=/cache -e SBT_OPTS="-Duser.home=/cache -Xmx4g" \
+  -e HOME=/cache -e SBT_OPTS="-Duser.home=/cache -Xmx4g -Xss8m" \
   -e PATH="/src/modules/webapp/node_modules/.bin:/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
   -v "$cache:/cache" -v "$PWD:/src" \
   docspell-ng-builder \
