@@ -556,6 +556,7 @@ viewSingle2 cfg settings model =
                 , value model.filterString
                 , class "inline-block border-0 px-0 w-full py-0 focus:ring-0 "
                 , class cfg.style.input
+                , class "ds-dropdown-filter"
                 , classList [ ( "hidden", not (model.menuOpen && isSearchable model) ) ]
                 ]
                 []
@@ -570,6 +571,7 @@ viewSingle2 cfg settings model =
             ]
         , div
             [ class cfg.style.menu
+            , class "ds-dropdown-menu"
             , classList [ ( "hidden", not model.menuOpen ) ]
             ]
             (getOptions model |> List.map renderItem)
@@ -632,6 +634,7 @@ viewMultiple2 cfg settings model =
                 , value model.filterString
                 , class "inline-flex w-16 border-0 px-0 focus:ring-0 h-6"
                 , class cfg.style.input
+                , class "ds-dropdown-filter"
                 ]
                 []
             , a
@@ -649,6 +652,7 @@ viewMultiple2 cfg settings model =
             ]
         , div
             [ class cfg.style.menu
+            , class "ds-dropdown-menu"
             , classList [ ( "hidden", not model.menuOpen ) ]
             ]
             (getOptions model |> List.map renderItem)

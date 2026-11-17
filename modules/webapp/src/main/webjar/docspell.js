@@ -163,3 +163,43 @@ function initWS() {
 // elmApp.ports.sendWsMessage.subscribe(function(msg) {
 //     socket.send(msg);
 // });
+
+// Comp.Dropdown has no per-instance DOM id, so Elm cannot focus its filter
+// input. Instead, react to its menu being shown or hidden.
+function dsIsVisible(el) {
+    return el && el.getClientRects().length > 0;
+}
+
+function dsDropdownMenuToggled(menu, wasHidden) {
+    var isHidden = menu.classList.contains("hidden");
+    var dropdown = menu.parentElement;
+    var input = dropdown.querySelector("input.ds-dropdown-filter");
+    if (wasHidden && !isHidden) {
+        if (dsIsVisible(input)) {
+            input.focus();
+        }
+    } else if (!wasHidden && isHidden) {
+        // keep focus inside the dropdown when the focused element got hidden
+        var active = document.activeElement;
+        if (dropdown.contains(active) && !dsIsVisible(active)) {
+            var target = dsIsVisible(input) ? input : dropdown.querySelector("a[tabindex]");
+            if (target) {
+                target.focus();
+            }
+        }
+    }
+}
+
+new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+        if (m.target.classList.contains("ds-dropdown-menu")) {
+            var wasHidden = (m.oldValue || "").split(/\s+/).indexOf("hidden") >= 0;
+            dsDropdownMenuToggled(m.target, wasHidden);
+        }
+    });
+}).observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class"],
+    attributeOldValue: true
+});

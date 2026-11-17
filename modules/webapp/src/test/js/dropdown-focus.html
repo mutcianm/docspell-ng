@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Self-check for the dropdown focus observer in docspell.js. Open in a browser,
+     or: firefox --headless --screenshot out.png file://$PWD/dropdown-focus.html --><html><head><style>.hidden{display:none}</style></head><body>
+<div id="single" class="relative"><div><a id="s-toggle" tabindex="0" href="#">pick</a><input id="s-in" class="ds-dropdown-filter hidden"></div>
+ <div id="s-menu" class="menu ds-dropdown-menu hidden"><a id="s-item" href="#">x</a></div></div>
+<div id="multi" class="relative"><div><input id="m-in" class="ds-dropdown-filter"><a id="m-arrow" href="#">v</a></div>
+ <div id="m-menu" class="menu ds-dropdown-menu hidden"><a id="m-item" href="#">y</a></div></div>
+<button id="other">other</button>
+<pre id="out"></pre>
+<script>
+// minimal Elm stub so docspell.js can load without the compiled app
+var elmFlags = {};
+var Elm = { Main: { init: function() {
+  return { ports: new Proxy({}, { get: function() { return { subscribe: function() {}, send: function() {} }; } }) };
+} } };
+</script>
+<script src="../../main/webjar/docspell.js"></script>
+<script>
+const $=id=>document.getElementById(id), r=[];
+const tick=()=>Promise.resolve();
+const check=(name,ok)=>r.push((ok?"PASS ":"FAIL ")+name);
+(async()=>{
+ // single: open -> input shown and focused
+ $("s-toggle").focus(); $("s-toggle").classList.add("hidden"); $("s-in").classList.remove("hidden"); $("s-menu").classList.remove("hidden"); await tick();
+ check("single open focuses filter", document.activeElement===$("s-in"));
+ // single: Esc -> input hidden, focus goes back to toggle
+ $("s-in").classList.add("hidden"); $("s-toggle").classList.remove("hidden"); $("s-menu").classList.add("hidden"); await tick();
+ check("single close returns focus to toggle", document.activeElement===$("s-toggle"));
+ // multi: open via arrow -> input focused
+ $("m-arrow").focus(); $("m-menu").classList.remove("hidden"); await tick();
+ check("multi open focuses filter", document.activeElement===$("m-in"));
+ // multi: click item (focus on item), menu closes -> focus back to filter
+ $("m-item").focus(); $("m-menu").classList.add("hidden"); await tick();
+ check("multi select returns focus to filter", document.activeElement===$("m-in"));
+ // closing while focus is elsewhere must not steal focus
+ $("m-menu").classList.remove("hidden"); await tick(); $("other").focus(); $("m-menu").classList.add("hidden"); await tick();
+ check("close does not steal unrelated focus", document.activeElement===$("other"));
+ // unrelated class change on an open menu must not refocus
+ $("m-menu").classList.remove("hidden"); await tick(); $("other").focus(); $("m-menu").classList.add("foo"); await tick();
+ check("non-toggle class change ignored", document.activeElement===$("other"));
+ $("out").textContent=r.join("\n"); document.title=r.every(x=>x.startsWith("PASS"))?"ALLPASS":"SOMEFAIL";
+})();
+</script></body></html>
