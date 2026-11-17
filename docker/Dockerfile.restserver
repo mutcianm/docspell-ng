@@ -1,0 +1,31 @@
+# Based on https://github.com/docspell/docker/blob/master/images/Dockerfile.restserver,
+# installing a locally built zip instead of a release download.
+FROM docker.io/library/ubuntu:26.04 AS base
+
+RUN apt update \
+ && apt full-upgrade -y
+
+RUN apt install -y \
+    tzdata \
+    openjdk-21-jre
+
+FROM base AS unpack
+
+RUN apt install -y unzip
+
+WORKDIR /opt
+
+COPY docspell-restserver-*.zip /opt/
+ARG DOCSPELL_VERSION
+RUN unzip docspell-restserver-*.zip && \
+  rm docspell-restserver-*.zip && \
+  mv docspell-restserver-* docspell-restserver && \
+  rm docspell-restserver/conf/docspell-server.conf && \
+  echo "$DOCSPELL_VERSION" > docspell-restserver/version
+
+FROM base
+
+COPY --from=unpack /opt/docspell-restserver /opt/docspell-restserver
+
+ENTRYPOINT ["/opt/docspell-restserver/bin/docspell-restserver"]
+EXPOSE 7880

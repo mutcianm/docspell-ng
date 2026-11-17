@@ -1,0 +1,53 @@
+# Based on https://github.com/docspell/docker/blob/master/images/Dockerfile.joex,
+# installing a locally built zip instead of a release download.
+FROM docker.io/library/ubuntu:26.04 AS base
+
+RUN apt update \
+ && apt full-upgrade -y \
+ && apt install -y ca-certificates curl \
+ && install -m 0755 -d /etc/apt/keyrings \
+ && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
+ && chmod a+r /etc/apt/keyrings/docker.asc \
+ && echo "deb [signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu oracular stable" > /etc/apt/sources.list.d/docker.list \
+ && apt update
+
+RUN apt install -y \
+    $(apt list 2>/dev/null | grep 'tesseract-ocr-' | cut -d'/' -f1) \
+    tzdata \
+    openjdk-21-jre \
+    ghostscript \
+    unpaper \
+    weasyprint \
+    unoconv \
+    python3-distutils-extra \
+    fonts-droid-fallback \
+    fonts-dejavu \
+    fonts-freefont-ttf \
+    fonts-noto \
+    pngquant \
+    ocrmypdf \
+    qpdf \
+    docker-ce-cli
+
+FROM base AS unpack
+
+RUN apt install -y unzip
+
+WORKDIR /opt
+
+COPY docspell-joex-*.zip /opt/
+ARG DOCSPELL_VERSION
+RUN unzip docspell-joex-*.zip && \
+  rm docspell-joex-*.zip && \
+  mv docspell-joex-* docspell-joex && \
+  rm docspell-joex/conf/docspell-joex.conf && \
+  echo "$DOCSPELL_VERSION" > docspell-joex/version
+
+FROM base
+
+COPY --from=unpack /opt/docspell-joex /opt/docspell-joex
+
+COPY joex-entrypoint.sh /opt/joex-entrypoint.sh
+
+ENTRYPOINT ["/opt/joex-entrypoint.sh"]
+EXPOSE 7878

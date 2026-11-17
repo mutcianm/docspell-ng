@@ -37,3 +37,4 @@ sbt.json
 .cursor
 .bloop
 metals.sbt
+docker/local.env
