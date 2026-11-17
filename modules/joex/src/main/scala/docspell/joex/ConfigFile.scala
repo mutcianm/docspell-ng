@@ -46,6 +46,20 @@ object ConfigFile {
       ConfigReader[String].emap(reason(HtmlConverter.fromString))
   }
 
+  /** Hands the single `ocr-extra-languages` setting to every OCR command config. */
+  def withOcrExtraLanguages(cfg: Config): Config = {
+    val langs = cfg.ocrExtraLanguages
+    val ocr = cfg.extraction.ocr
+    cfg.copy(
+      extraction = cfg.extraction
+        .copy(ocr = ocr.copy(tesseract = ocr.tesseract.copy(extraLanguages = langs))),
+      convert = cfg.convert.copy(
+        tesseract = cfg.convert.tesseract.copy(extraLanguages = langs),
+        ocrmypdf = cfg.convert.ocrmypdf.copy(extraLanguages = langs)
+      )
+    )
+  }
+
   def validate: Validation[Config] =
     Validation.of[Config](
       Validation.failWhen(
@@ -61,6 +75,7 @@ object ConfigFile {
         "No subject given for enabled update check!"
       ),
       Validation(cfg => cfg.files.validate.map(f => cfg.copy(files = f))),
+      Validation(cfg => Validation.valid(withOcrExtraLanguages(cfg))),
       Validation.failWhen(
         cfg =>
           cfg.fullTextSearch.enabled &&

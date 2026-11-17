@@ -40,6 +40,7 @@ case class Config(
     periodicScheduler: PeriodicSchedulerConfig,
     userTasks: Config.UserTasks,
     houseKeeping: HouseKeepingConfig,
+    ocrExtraLanguages: String,
     extraction: ExtractConfig,
     textAnalysis: Config.TextAnalysis,
     convert: ConvertConfig,

@@ -10,4 +10,9 @@ import fs2.io.file.Path
 
 import docspell.common.exec.ExternalCommand
 
-case class TesseractConfig(command: ExternalCommand, workingDir: Path)
+// extraLanguages: set from docspell.joex.ocr-extra-languages, see joex ConfigFile
+case class TesseractConfig(
+    command: ExternalCommand,
+    workingDir: Path,
+    extraLanguages: String = ""
+)

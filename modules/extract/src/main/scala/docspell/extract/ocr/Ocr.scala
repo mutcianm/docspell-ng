@@ -10,6 +10,7 @@ import cats.effect._
 import fs2.Stream
 import fs2.io.file.{Files, Path}
 
+import docspell.common.OcrLanguages
 import docspell.common.exec.ExternalCommand
 import docspell.common.exec.SysExec
 import docspell.common.util.File
@@ -163,7 +164,7 @@ object Ocr {
     runUnpaperFile(img, config.unpaper.command, img.parent, logger).flatMap { uimg =>
       val cmd = config.tesseract.command
         .withVars(
-          Map("file" -> uimg.fileName.toString, "lang" -> fixLanguage(lang))
+          Map("file" -> uimg.fileName.toString) ++ langVars(lang, config)
         )
         .resolved
 
@@ -180,12 +181,17 @@ object Ocr {
       config: OcrConfig
   ): Stream[F, String] = {
     val cmd = config.tesseract.command
-      .withVars(Map("file" -> "stdin", "lang" -> fixLanguage(lang)))
+      .withVars(Map("file" -> "stdin") ++ langVars(lang, config))
       .resolved
 
     Stream
       .resource(SysExec(cmd, logger, None, Some(img)))
       .evalMap(_.runToSuccessStdout(logger))
+  }
+
+  private def langVars(lang: String, config: OcrConfig): Map[String, String] = {
+    val l = fixLanguage(lang)
+    Map("lang" -> l, "langs" -> OcrLanguages.combine(l, config.tesseract.extraLanguages))
   }
 
   private def fixLanguage(lang: String): String =

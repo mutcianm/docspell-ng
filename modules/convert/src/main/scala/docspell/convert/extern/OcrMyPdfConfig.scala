@@ -13,5 +13,7 @@ import docspell.common.exec.ExternalCommand
 case class OcrMyPdfConfig(
     enabled: Boolean,
     command: ExternalCommand,
-    workingDir: Path
+    workingDir: Path,
+    // set from docspell.joex.ocr-extra-languages, see joex ConfigFile
+    extraLanguages: String = ""
 )

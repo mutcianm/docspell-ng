@@ -24,7 +24,8 @@ object OcrConfig {
 
   case class Ghostscript(command: ExternalCommand, workingDir: Path)
 
-  case class Tesseract(command: ExternalCommand)
+  // extraLanguages: set from docspell.joex.ocr-extra-languages, see joex ConfigFile
+  case class Tesseract(command: ExternalCommand, extraLanguages: String = "")
 
   case class Unpaper(command: ExternalCommand)
 
