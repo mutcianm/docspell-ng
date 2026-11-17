@@ -234,44 +234,44 @@ trait DSL extends DoobieMeta {
       Condition.InSubSelect(col, subsel)
 
     def >(subsel: Select): Condition =
-      Condition.CompareSelect(col.s, Operator.Gt, subsel)
+      Condition.CompareSelect(s, Operator.Gt, subsel)
     def <(subsel: Select): Condition =
-      Condition.CompareSelect(col.s, Operator.Lt, subsel)
+      Condition.CompareSelect(s, Operator.Lt, subsel)
     def >=(subsel: Select): Condition =
-      Condition.CompareSelect(col.s, Operator.Gte, subsel)
+      Condition.CompareSelect(s, Operator.Gte, subsel)
     def <=(subsel: Select): Condition =
-      Condition.CompareSelect(col.s, Operator.Lte, subsel)
+      Condition.CompareSelect(s, Operator.Lte, subsel)
     def ===(subsel: Select): Condition =
-      Condition.CompareSelect(col.s, Operator.Eq, subsel)
+      Condition.CompareSelect(s, Operator.Eq, subsel)
     def !==(subsel: Select): Condition =
-      Condition.CompareSelect(col.s, Operator.Neq, subsel)
+      Condition.CompareSelect(s, Operator.Neq, subsel)
 
     def notIn(subsel: Select): Condition =
       in(subsel).negate
 
     def in(values: Nel[A])(implicit P: Put[A]): Condition =
-      Condition.InValues(col.s, values, lower = false)
+      Condition.InValues(s, values, lower = false)
 
     def notIn(values: Nel[A])(implicit P: Put[A]): Condition =
       in(values).negate
 
     def inLower(values: Nel[String]): Condition =
-      Condition.InValues(col.s, values.map(_.toLowerCase), lower = true)
+      Condition.InValues(s, values.map(_.toLowerCase), lower = true)
 
     def inLowerA(values: Nel[A])(implicit P: Put[A]): Condition =
-      Condition.InValues(col.s, values, lower = true)
+      Condition.InValues(s, values, lower = true)
 
     def notInLower(values: Nel[String]): Condition =
-      Condition.InValues(col.s, values.map(_.toLowerCase), lower = true).negate
+      Condition.InValues(s, values.map(_.toLowerCase), lower = true).negate
 
     def notInLowerA(values: Nel[A])(implicit P: Put[A]): Condition =
-      Condition.InValues(col.s, values, lower = true).negate
+      Condition.InValues(s, values, lower = true).negate
 
     def isNull: Condition =
-      Condition.IsNull(col.s)
+      Condition.IsNull(s)
 
     def isNotNull: Condition =
-      Condition.IsNull(col.s).negate
+      Condition.IsNull(s).negate
 
     def ===(other: Column[A]): Condition =
       Condition.CompareCol(col, Operator.Eq, other)
@@ -322,31 +322,31 @@ trait DSL extends DoobieMeta {
       OrderBy(SelectExpr.SelectFun(dbf, None), OrderBy.OrderType.Desc)
 
     def ===[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Eq, value)
+      Condition.CompareFVal(s, Operator.Eq, value)
 
     def ====(value: String): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Eq, value)
+      Condition.CompareFVal(s, Operator.Eq, value)
 
     def like[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.LowerLike, value)
+      Condition.CompareFVal(s, Operator.LowerLike, value)
 
     def likes(value: String): Condition =
-      Condition.CompareFVal(dbf.s, Operator.LowerLike, value)
+      Condition.CompareFVal(s, Operator.LowerLike, value)
 
     def <=[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Lte, value)
+      Condition.CompareFVal(s, Operator.Lte, value)
 
     def >=[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Gte, value)
+      Condition.CompareFVal(s, Operator.Gte, value)
 
     def >[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Gt, value)
+      Condition.CompareFVal(s, Operator.Gt, value)
 
     def <[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Lt, value)
+      Condition.CompareFVal(s, Operator.Lt, value)
 
     def <>[A](value: A)(implicit P: Put[A]): Condition =
-      Condition.CompareFVal(dbf.s, Operator.Neq, value)
+      Condition.CompareFVal(s, Operator.Neq, value)
 
     def -[A](value: A)(implicit P: Put[A]): DBFunction =
       DBFunction.Calc(
