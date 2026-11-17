@@ -30,7 +30,15 @@ object WebjarRoutes {
     ".otf",
     ".ttf",
     ".yml",
-    ".xml"
+    ".xml",
+    // pdf.js viewer: modules, locales, fonts, cmaps, wasm decoders, color profiles
+    ".mjs",
+    ".ftl",
+    ".pfb",
+    ".bcmap",
+    ".wasm",
+    ".icc",
+    ".gif"
   )
 
   def appRoutes[F[_]: Async]: HttpRoutes[F] =
