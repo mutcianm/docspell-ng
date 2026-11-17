@@ -203,3 +203,28 @@ new MutationObserver(function(mutations) {
     attributeFilter: ["class"],
     attributeOldValue: true
 });
+
+// Close popup menus on a click outside of them or on Escape. Elm marks open
+// menu roots with ds-menu-open and listens for ds-close (see Util.Html.menuRoot).
+function dsCloseMenus(shouldClose) {
+    document.querySelectorAll(".ds-menu-open").forEach(function(menu) {
+        if (shouldClose(menu)) {
+            menu.dispatchEvent(new CustomEvent("ds-close"));
+        }
+    });
+}
+
+document.addEventListener("pointerdown", function(event) {
+    dsCloseMenus(function(menu) {
+        return !(menu.closest(".ds-menu-scope") || menu).contains(event.target);
+    });
+}, true);
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        // ds-menu-keys components handle Escape themselves while focused
+        dsCloseMenus(function(menu) {
+            return !(menu.classList.contains("ds-menu-keys") && menu.contains(document.activeElement));
+        });
+    }
+});

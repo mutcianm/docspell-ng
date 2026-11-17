@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- Self-check for closing popup menus in docspell.js. Open in a browser,
+     or: firefox --headless --screenshot out.png file://$PWD/menu-close.html -->
+<html><head><style>.hidden{display:none}</style></head><body>
+<div id="a" class="relative"><a id="a-toggle" href="#">A</a><div id="a-menu"><a id="a-item" href="#">a</a></div></div>
+<div id="b" class="relative"><a id="b-toggle" href="#">B</a><div id="b-menu" class="hidden">b</div></div>
+<div id="scope" class="ds-menu-scope"><a id="scope-cat" href="#">cat</a>
+  <div id="d" class="relative ds-menu-keys"><input id="d-in"><div id="d-menu">d</div></div></div>
+<button id="other">other</button>
+<pre id="out"></pre>
+<script>
+// minimal Elm stub so docspell.js can load without the compiled app
+var elmFlags = {};
+var Elm = { Main: { init: function() {
+  return { ports: new Proxy({}, { get: function() { return { subscribe: function() {}, send: function() {} }; } }) };
+} } };
+</script>
+<script src="../../main/webjar/docspell.js"></script>
+<script>
+const $ = id => document.getElementById(id), r = [];
+const closed = {};
+["a", "b", "d"].forEach(id => $(id).addEventListener("ds-close", () => closed[id] = (closed[id] || 0) + 1));
+const reset = () => ["a", "b", "d"].forEach(id => closed[id] = 0);
+const setOpen = (id, open) => $(id).classList.toggle("ds-menu-open", open);
+const press = el => el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+const esc = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+const check = (name, ok) => r.push((ok ? "PASS " : "FAIL ") + name);
+
+setOpen("a", true); setOpen("d", true);
+
+reset(); press($("other"));
+check("outside click closes all open menus", closed.a === 1 && closed.d === 1 && closed.b === 0);
+
+reset(); press($("a-item"));
+check("click inside a menu keeps it open", closed.a === 0 && closed.d === 1);
+
+reset(); press($("scope-cat"));
+check("click inside ds-menu-scope keeps the menu open", closed.d === 0 && closed.a === 1);
+
+reset(); press($("b-toggle"));
+check("opening another menu closes the open one", closed.a === 1 && closed.b === 0);
+
+reset(); $("a-toggle").focus(); esc();
+check("Escape closes a menu even when focused inside", closed.a === 1);
+
+reset(); $("d-in").focus(); esc();
+check("Escape leaves focused ds-menu-keys menus to Elm", closed.d === 0 && closed.a === 1);
+
+reset(); $("other").focus(); esc();
+check("Escape closes unfocused ds-menu-keys menus", closed.d === 1);
+
+reset(); setOpen("a", false); setOpen("d", false); press($("other")); esc();
+check("closed menus get no events", closed.a === 0 && closed.d === 0);
+
+$("out").textContent = r.join("\n");
+document.title = r.every(x => x.startsWith("PASS")) ? "ALLPASS" : "SOMEFAIL";
+</script></body></html>

@@ -10,6 +10,7 @@ module Util.Html exposing
     , checkbox2
     , classActive
     , intToKeyCode
+    , menuRoot
     , onClickk
     , onDragEnter
     , onDragLeave
@@ -23,7 +24,7 @@ module Util.Html exposing
 
 import File exposing (File)
 import Html exposing (Attribute, Html, i)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, classList)
 import Html.Events exposing (keyCode, on, preventDefaultOn)
 import Json.Decode as D
 
@@ -139,6 +140,17 @@ intToKeyCode code =
 onKeyUp : (Int -> msg) -> Attribute msg
 onKeyUp tagger =
     on "keyup" (D.map tagger keyCode)
+
+
+{-| Attributes for the root element of a popup menu. docspell.js sends the
+non-bubbling `ds-close` event to open menus on a click outside of them or on
+Escape.
+-}
+menuRoot : Bool -> msg -> List (Attribute msg)
+menuRoot open closeMsg =
+    [ classList [ ( "ds-menu-open", open ) ]
+    , on "ds-close" (D.succeed closeMsg)
+    ]
 
 
 onKeyDown : (Int -> msg) -> Attribute msg
