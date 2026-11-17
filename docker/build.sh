@@ -29,6 +29,7 @@ for app in restserver joex; do
   cp "modules/$app/target/universal/docspell-$app-$version.zip" "docker/Dockerfile.$app" docker/joex-entrypoint.sh "$stage/$app/"
   DOCKER_HOST="$target_host" docker build \
     --build-arg DOCSPELL_VERSION="$tag" \
+    ${TESSDATA_BEST_LANGS:+--build-arg TESSDATA_BEST_LANGS="$TESSDATA_BEST_LANGS"} \
     -t "docspell-ng/$app:$tag" -f "$stage/$app/Dockerfile.$app" "$stage/$app"
 done
 

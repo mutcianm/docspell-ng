@@ -20,6 +20,10 @@ Docker host, the deployment directory and the PostgreSQL container name.
    directly on `TARGET_DOCKER_HOST`, so no registry is needed. A dirty working
    tree gets a `-dirty` suffix on the tag.
 
+The joex image replaces the distribution's Tesseract models with the more accurate
+`tessdata_best` models for the languages in `TESSDATA_BEST_LANGS` (default: `eng osd`).
+Each model adds about 10–15 MB to the image, and OCR with them takes about twice as long.
+
 ## Deploy
 
     docker/deploy.sh <tag>

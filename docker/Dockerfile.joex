@@ -29,6 +29,15 @@ RUN apt install -y \
     qpdf \
     docker-ce-cli
 
+# Replace the distribution models of these languages with the more accurate
+# (and ~2x slower) tessdata_best models; all other languages stay as installed.
+ARG TESSDATA_BEST_VERSION=4.1.0
+ARG TESSDATA_BEST_LANGS="eng osd"
+RUN for l in $TESSDATA_BEST_LANGS; do \
+      curl -fsSLo "/usr/share/tesseract-ocr/5/tessdata/$l.traineddata" \
+        "https://github.com/tesseract-ocr/tessdata_best/raw/$TESSDATA_BEST_VERSION/$l.traineddata" || exit 1; \
+    done
+
 FROM base AS unpack
 
 RUN apt install -y unzip
