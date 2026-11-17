@@ -38,3 +38,4 @@ sbt.json
 .bloop
 metals.sbt
 docker/local.env
+__pycache__/
