@@ -24,6 +24,7 @@ val sharedSettings = Seq(
     )
   ),
   startYear := Some(2020),
+  dependencyOverrides ++= Dependencies.securityOverrides,
   headerLicenseStyle := HeaderLicenseStyle.SpdxSyntax,
   headerSources / excludeFilter := HiddenFileFilter || "*.java" || "StringUtil.scala",
   scalacOptions ++= Seq(

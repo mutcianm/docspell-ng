@@ -342,4 +342,17 @@ object Dependencies {
     "com.ibm.icu" % "icu4j" % Icu4jVersion
   )
 
+  // patched releases of transitive dependencies with published advisories
+  val securityOverrides = Seq(
+    "com.fasterxml.jackson.core" % "jackson-annotations" % "2.21",
+    "com.fasterxml.jackson.core" % "jackson-core" % "2.21.8",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.21.8",
+    "com.google.guava" % "guava" % "33.8.0-jre",
+    "org.apache.commons" % "commons-lang3" % "3.22.0",
+    "org.apache.logging.log4j" % "log4j-api" % "2.26.1",
+    "org.bouncycastle" % "bcprov-jdk18on" % "1.87",
+    "org.typelevel" %% "jawn-parser" % "1.8.0",
+    "org.xerial.snappy" % "snappy-java" % "1.1.10.12"
+  )
+
 }
