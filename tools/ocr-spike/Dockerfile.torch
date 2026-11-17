@@ -1,0 +1,8 @@
+# docTR, Surya and EasyOCR share a CPU-only torch base.
+FROM docker.io/library/python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+ARG PACKAGES
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu $PACKAGES
+COPY ocr.py /opt/ocr.py
+ENTRYPOINT ["python3", "/opt/ocr.py"]

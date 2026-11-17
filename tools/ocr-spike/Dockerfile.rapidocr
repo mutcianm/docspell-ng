@@ -1,0 +1,8 @@
+# PP-OCR models on onnxruntime: the CPU-friendly way to run PaddleOCR's models.
+FROM docker.io/library/python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir rapidocr onnxruntime \
+ # models are downloaded into the package dir on first use
+ && chmod -R a+w /usr/local/lib/python3.12/site-packages/rapidocr/models
+COPY ocr.py /opt/ocr.py
+ENTRYPOINT ["python3", "/opt/ocr.py"]

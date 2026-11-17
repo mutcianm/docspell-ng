@@ -1,0 +1,7 @@
+# Same tesseract major/minor as the joex image (ubuntu 26.04); also renders PDFs.
+FROM docker.io/library/ubuntu:26.04
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pil poppler-utils tesseract-ocr tesseract-ocr-rus tesseract-ocr-nld tesseract-ocr-eng \
+ && rm -rf /var/lib/apt/lists/*
+COPY ocr.py /opt/ocr.py
+ENTRYPOINT ["python3", "/opt/ocr.py"]
