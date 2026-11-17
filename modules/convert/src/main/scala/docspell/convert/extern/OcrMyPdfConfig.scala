@@ -14,6 +14,12 @@ case class OcrMyPdfConfig(
     enabled: Boolean,
     command: ExternalCommand,
     workingDir: Path,
+    mode: String = OcrMyPdfConfig.SkipText,
     // set from docspell.joex.ocr-extra-languages, see joex ConfigFile
     extraLanguages: String = ""
 )
+
+object OcrMyPdfConfig {
+  val SkipText = "skip-text"
+  val modes: Set[String] = Set(SkipText, "redo-ocr", "force-ocr")
+}

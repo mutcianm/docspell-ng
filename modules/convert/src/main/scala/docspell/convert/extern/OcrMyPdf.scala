@@ -30,7 +30,8 @@ object OcrMyPdf {
       val cmd = cfg.command.withVars(
         Map(
           "lang" -> lang.iso3,
-          "langs" -> OcrLanguages.combine(lang.iso3, cfg.extraLanguages)
+          "langs" -> OcrLanguages.combine(lang.iso3, cfg.extraLanguages),
+          "mode" -> cfg.mode
         )
       )
 

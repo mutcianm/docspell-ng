@@ -32,6 +32,7 @@ class ConfigFileTest extends FunSuite {
         Map(
           "lang" -> lang,
           "langs" -> OcrLanguages.combine(lang, cfg.convert.ocrmypdf.extraLanguages),
+          "mode" -> cfg.convert.ocrmypdf.mode,
           "infile" -> "in.pdf",
           "outfile" -> "out.pdf"
         )
@@ -57,5 +58,27 @@ class ConfigFileTest extends FunSuite {
   test("language specific mappings still match the document language") {
     val cfg = load("DOCSPELL_JOEX_OCR__EXTRA__LANGUAGES" -> "eng")
     assert(ocrmypdfArgs(cfg, "jpn").containsSlice(List("-l", "jpn", "--output-type")))
+  }
+
+  test("ocrmypdf mode defaults to skip-text with deskew") {
+    val args = ocrmypdfArgs(load(), "deu")
+    assert(args.containsSlice(List("--skip-text", "--deskew")), args)
+  }
+
+  test("ocrmypdf redo-ocr mode drops skip-text and deskew") {
+    val args =
+      ocrmypdfArgs(load("DOCSPELL_JOEX_CONVERT_OCRMYPDF_MODE" -> "redo-ocr"), "deu")
+    assert(args.contains("--redo-ocr"), args)
+    assert(!args.contains("--skip-text") && !args.contains("--deskew"), args)
+  }
+
+  test("ocrmypdf force-ocr mode keeps deskew") {
+    val args =
+      ocrmypdfArgs(load("DOCSPELL_JOEX_CONVERT_OCRMYPDF_MODE" -> "force-ocr"), "deu")
+    assert(args.containsSlice(List("--force-ocr", "--deskew")), args)
+  }
+
+  test("unknown ocrmypdf mode is rejected") {
+    intercept[RuntimeException](load("DOCSPELL_JOEX_CONVERT_OCRMYPDF_MODE" -> "redo"))
   }
 }

@@ -12,6 +12,7 @@ import fs2.io.file.Files
 import docspell.config.Implicits._
 import docspell.config.{ConfigFactory, FtsType, Validation}
 import docspell.convert.ConvertConfig.HtmlConverter
+import docspell.convert.extern.OcrMyPdfConfig
 import docspell.scheduler.CountingScheme
 import docspell.store.Db
 
@@ -76,6 +77,10 @@ object ConfigFile {
       ),
       Validation(cfg => cfg.files.validate.map(f => cfg.copy(files = f))),
       Validation(cfg => Validation.valid(withOcrExtraLanguages(cfg))),
+      Validation.failWhen(
+        cfg => !OcrMyPdfConfig.modes.contains(cfg.convert.ocrmypdf.mode),
+        s"convert.ocrmypdf.mode must be one of: ${OcrMyPdfConfig.modes.mkString(", ")}"
+      ),
       Validation.failWhen(
         cfg =>
           cfg.fullTextSearch.enabled &&
