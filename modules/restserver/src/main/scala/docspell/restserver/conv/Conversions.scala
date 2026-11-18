@@ -148,8 +148,12 @@ trait Conversions {
       data.archives.map((mkAttachmentArchive _).tupled).toList,
       data.tags.map(mkTag).toList,
       data.customFields.map(mkItemFieldValue).toList,
+      data.links.map(mkItemLink).toList,
       data.relatedItems.map(mkItemLight).toList
     )
+
+  def mkItemLink(l: QEntity.ItemLink): ItemLink =
+    ItemLink(l.role.id, l.role.name, l.entity.id, l.entity.name, l.entity.typeId)
 
   def mkItemFieldValue(v: QItemFieldValue): ItemFieldValue =
     ItemFieldValue(v.fieldId, v.fieldName, v.fieldLabel, v.fieldType, v.value)

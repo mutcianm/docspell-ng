@@ -107,6 +107,7 @@ object QItem extends FtsSupport {
     val tags = RTag.findByItem(id)
     val customfields = findCustomFieldValuesForItem(id)
     val related = findRelatedItems(id, collective)
+    val links = QEntity.findItemLinks(id, collective)
 
     for {
       data <- q
@@ -116,8 +117,9 @@ object QItem extends FtsSupport {
       ts <- tags
       cfs <- customfields
       rel <- related
+      lnk <- links
     } yield data.map(d =>
-      ItemData(d._1, d._2, d._3, d._4, d._5, d._6, ts, att, srcs, arch, cfs, rel)
+      ItemData(d._1, d._2, d._3, d._4, d._5, d._6, ts, att, srcs, arch, cfs, rel, lnk)
     )
   }
 

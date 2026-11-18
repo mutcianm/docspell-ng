@@ -21,7 +21,8 @@ case class ItemData(
     sources: Vector[(RAttachmentSource, RFileMeta)],
     archives: Vector[(RAttachmentArchive, RFileMeta)],
     customFields: Vector[ItemFieldValue],
-    relatedItems: Vector[ListItem]
+    relatedItems: Vector[ListItem],
+    links: Vector[QEntity.ItemLink]
 ) {
 
   def filterCollective(coll: CollectiveId): Option[ItemData] =

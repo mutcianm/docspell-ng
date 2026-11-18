@@ -5978,6 +5978,408 @@ paths:
               schema:
                 $ref: "#/components/schemas/BasicResult"
 
+  /sec/entitytype:
+    get:
+      operationId: "sec-entitytype-get-all"
+      tags: [ Entities ]
+      summary: Get all entity types.
+      description: |
+        Returns all entity types of the collective with their
+        attribute definitions.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityTypeList"
+    post:
+      operationId: "sec-entitytype-new"
+      tags: [ Entities ]
+      summary: Create a new entity type.
+      description: |
+        Creates a new entity type without attributes.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEntityType"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResult"
+
+  /sec/entitytype/{id}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    put:
+      operationId: "sec-entitytype-edit"
+      tags: [ Entities ]
+      summary: Change an entity type.
+      description: |
+        Changes name, label and the recognize flag. Built-in types
+        cannot be renamed.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEntityType"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+    delete:
+      operationId: "sec-entitytype-delete"
+      tags: [ Entities ]
+      summary: Delete an entity type.
+      description: |
+        Deletes an entity type with its attribute definitions. Built-in
+        types and types that still have entities cannot be deleted.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+
+  /sec/entitytype/{id}/attr:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    post:
+      operationId: "sec-entitytype-attr-new"
+      tags: [ Entities ]
+      summary: Add an attribute definition to an entity type.
+      description: |
+        Adds an attribute definition to the entity type.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewAttrDef"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResult"
+
+  /sec/entitytype/{id}/attr/{attrId}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+      - $ref: "#/components/parameters/attrId"
+    put:
+      operationId: "sec-entitytype-attr-edit"
+      tags: [ Entities ]
+      summary: Change an attribute definition.
+      description: |
+        Changes an attribute definition. The field type cannot change
+        while values exist, and an attribute can only become
+        single-valued if no entity has several values.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewAttrDef"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+    delete:
+      operationId: "sec-entitytype-attr-delete"
+      tags: [ Entities ]
+      summary: Delete an attribute definition.
+      description: |
+        Deletes the attribute definition and all its values.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+
+  /sec/entityrole:
+    get:
+      operationId: "sec-entityrole-get-all"
+      tags: [ Entities ]
+      summary: Get all roles.
+      description: |
+        Returns all roles that link items to entities.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityRoleList"
+    post:
+      operationId: "sec-entityrole-new"
+      tags: [ Entities ]
+      summary: Create a new role.
+      description: |
+        Creates a new role. A role without targets accepts entities of
+        any type.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEntityRole"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResult"
+
+  /sec/entityrole/{id}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    put:
+      operationId: "sec-entityrole-edit"
+      tags: [ Entities ]
+      summary: Change a role.
+      description: |
+        Changes a role. Built-in roles cannot be renamed. A change is
+        refused if existing item links would no longer fit.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEntityRole"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+    delete:
+      operationId: "sec-entityrole-delete"
+      tags: [ Entities ]
+      summary: Delete a role.
+      description: |
+        Deletes a role. Built-in roles and roles used by items cannot
+        be deleted.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+
+  /sec/entity:
+    get:
+      operationId: "sec-entity-get-all"
+      tags: [ Entities ]
+      summary: Get entities.
+      description: |
+        Returns entities with their attribute values, optionally
+        restricted to one type and filtered by name.
+      security:
+        - authTokenHeader: []
+      parameters:
+        - $ref: "#/components/parameters/q"
+        - $ref: "#/components/parameters/entityType"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityList"
+    post:
+      operationId: "sec-entity-new"
+      tags: [ Entities ]
+      summary: Create a new entity.
+      description: |
+        Creates a new entity. Attribute values are validated against
+        the type's attribute definitions; empty values are ignored.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEntity"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdResult"
+
+  /sec/entity/{id}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    get:
+      operationId: "sec-entity-get"
+      tags: [ Entities ]
+      summary: Get an entity.
+      description: |
+        Returns an entity with its attribute values.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entity"
+    put:
+      operationId: "sec-entity-edit"
+      tags: [ Entities ]
+      summary: Change an entity.
+      description: |
+        Changes name, notes and the suggest flag, and replaces all
+        attribute values. The type of an entity cannot change.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewEntity"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+    delete:
+      operationId: "sec-entity-delete"
+      tags: [ Entities ]
+      summary: Delete an entity.
+      description: |
+        Deletes the entity, its attribute values and its item links.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+
+  /sec/item/{id}/links:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    get:
+      operationId: "sec-item-links-get"
+      tags: [ Item ]
+      summary: Get the entities linked to an item.
+      description: |
+        Returns all entities linked to the item, with their role.
+      security:
+        - authTokenHeader: []
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemLinkList"
+
+  /sec/item/{id}/links/{roleId}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+      - $ref: "#/components/parameters/roleId"
+    put:
+      operationId: "sec-item-links-set"
+      tags: [ Item ]
+      summary: Set the entities linked to an item under a role.
+      description: |
+        Replaces the entities linked to the item under the given role.
+        An empty list removes all links of that role.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdList"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+
   /sec/addon/archive:
     get:
       operationId: "sec-addon-archive-get"
@@ -8072,6 +8474,7 @@ components:
         - tags
         - customfields
         - relatedItems
+        - links
       properties:
         id:
           type: string
@@ -8133,6 +8536,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ItemFieldValue"
+        links:
+          description: |
+            The entities linked to this item, with their role.
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemLink"
         relatedItems:
           description: |
             All related items to this item. The list contains items
@@ -9163,6 +9572,355 @@ components:
           type: string
         gitVersion:
           type: string
+    NewEntityType:
+      description: |
+        Data for creating or changing an entity type.
+      required:
+        - name
+        - recognize
+      properties:
+        name:
+          type: string
+          format: ident
+        label:
+          type: string
+        recognize:
+          description: |
+            Whether entities of this type are proposed from document text.
+          type: boolean
+
+    EntityType:
+      description: |
+        A kind of entity items can be linked to. Built-in types carry a
+        `key` the system refers to.
+      required:
+        - id
+        - name
+        - builtin
+        - recognize
+        - attrs
+        - created
+      properties:
+        id:
+          type: string
+          format: ident
+        key:
+          type: string
+          format: ident
+        name:
+          type: string
+          format: ident
+        label:
+          type: string
+        builtin:
+          type: boolean
+        recognize:
+          type: boolean
+        attrs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttrDef"
+        created:
+          type: integer
+          format: date-time
+
+    EntityTypeList:
+      description: |
+        A list of entity types.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntityType"
+
+    NewAttrDef:
+      description: |
+        Data for creating or changing an attribute definition.
+      required:
+        - name
+        - ftype
+        - multi
+        - matcher
+      properties:
+        name:
+          type: string
+          format: ident
+        label:
+          type: string
+        ftype:
+          type: string
+          format: customfieldtype
+          enum:
+            - text
+            - numeric
+            - date
+            - bool
+            - money
+        multi:
+          description: |
+            Whether an entity may have several values.
+          type: boolean
+        matcher:
+          description: |
+            Marks values that are searched for in document text and mail
+            headers.
+          type: string
+          format: entitymatcher
+          enum:
+            - none
+            - alias
+            - email
+            - website
+
+    AttrDef:
+      description: |
+        An attribute definition of an entity type.
+      required:
+        - id
+        - name
+        - ftype
+        - multi
+        - matcher
+        - created
+      properties:
+        id:
+          type: string
+          format: ident
+        name:
+          type: string
+          format: ident
+        label:
+          type: string
+        ftype:
+          type: string
+          format: customfieldtype
+          enum:
+            - text
+            - numeric
+            - date
+            - bool
+            - money
+        multi:
+          type: boolean
+        matcher:
+          type: string
+          format: entitymatcher
+          enum:
+            - none
+            - alias
+            - email
+            - website
+        created:
+          type: integer
+          format: date-time
+
+    NewEntityRole:
+      description: |
+        Data for creating or changing a role.
+      required:
+        - name
+        - multi
+        - learn
+        - targets
+      properties:
+        name:
+          type: string
+          format: ident
+        label:
+          type: string
+        multi:
+          description: |
+            Whether an item may link several entities under this role.
+          type: boolean
+        learn:
+          description: |
+            Whether the classifier learns to propose entities for this role.
+          type: boolean
+        targets:
+          description: |
+            The entity types this role accepts; empty accepts any type.
+          type: array
+          items:
+            type: string
+            format: ident
+
+    EntityRole:
+      description: |
+        How an item relates to an entity. Built-in roles carry a `key`
+        the system refers to.
+      required:
+        - id
+        - name
+        - builtin
+        - multi
+        - learn
+        - targets
+        - created
+      properties:
+        id:
+          type: string
+          format: ident
+        key:
+          type: string
+          format: ident
+        name:
+          type: string
+          format: ident
+        label:
+          type: string
+        builtin:
+          type: boolean
+        multi:
+          type: boolean
+        learn:
+          type: boolean
+        targets:
+          type: array
+          items:
+            type: string
+            format: ident
+        created:
+          type: integer
+          format: date-time
+
+    EntityRoleList:
+      description: |
+        A list of roles.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntityRole"
+
+    EntityAttrValue:
+      description: |
+        One value of an entity attribute.
+      required:
+        - attrId
+        - value
+      properties:
+        attrId:
+          type: string
+          format: ident
+        name:
+          description: |
+            The attribute's name; only set in responses.
+          type: string
+          format: ident
+        value:
+          type: string
+
+    NewEntity:
+      description: |
+        Data for creating or changing an entity.
+      required:
+        - typeId
+        - name
+        - suggest
+        - attrs
+      properties:
+        typeId:
+          type: string
+          format: ident
+        name:
+          type: string
+        notes:
+          type: string
+        suggest:
+          description: |
+            Whether the entity is offered in proposals and pickers.
+          type: boolean
+        attrs:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntityAttrValue"
+
+    Entity:
+      description: |
+        An entity with its attribute values.
+      required:
+        - id
+        - typeId
+        - name
+        - suggest
+        - attrs
+        - created
+        - updated
+      properties:
+        id:
+          type: string
+          format: ident
+        typeId:
+          type: string
+          format: ident
+        name:
+          type: string
+        notes:
+          type: string
+        suggest:
+          type: boolean
+        attrs:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntityAttrValue"
+        created:
+          type: integer
+          format: date-time
+        updated:
+          type: integer
+          format: date-time
+
+    EntityList:
+      description: |
+        A list of entities.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entity"
+
+    ItemLink:
+      description: |
+        An entity linked to an item under a role.
+      required:
+        - roleId
+        - roleName
+        - entityId
+        - entityName
+        - typeId
+      properties:
+        roleId:
+          type: string
+          format: ident
+        roleName:
+          type: string
+          format: ident
+        entityId:
+          type: string
+          format: ident
+        entityName:
+          type: string
+        typeId:
+          type: string
+          format: ident
+
+    ItemLinkList:
+      description: |
+        The entities linked to an item.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemLink"
+
   securitySchemes:
     authTokenHeader:
       type: apiKey
@@ -9177,6 +9935,27 @@ components:
       in: header
       name: Docspell-Share-Auth
   parameters:
+    attrId:
+      name: attrId
+      in: path
+      description: The id of an attribute definition
+      required: true
+      schema:
+        type: string
+    roleId:
+      name: roleId
+      in: path
+      description: The id of a role
+      required: true
+      schema:
+        type: string
+    entityType:
+      name: type
+      in: query
+      description: Restricts the result to entities of this type id.
+      required: false
+      schema:
+        type: string
     id:
       name: id
       in: path

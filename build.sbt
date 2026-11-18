@@ -238,6 +238,11 @@ val openapiScalaSettings = Seq(
           field.copy(typeDef =
             TypeDef("EquipmentUse", Imports("docspell.common.EquipmentUse"))
           )
+      case "entitymatcher" =>
+        field =>
+          field.copy(typeDef =
+            TypeDef("EntityMatcher", Imports("docspell.common.EntityMatcher"))
+          )
       case "searchmode" =>
         field =>
           field
