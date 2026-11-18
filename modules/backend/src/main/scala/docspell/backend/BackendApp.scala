@@ -48,6 +48,7 @@ trait BackendApp[F[_]] {
   def userTask: OUserTask[F]
   def folder: OFolder[F]
   def customFields: OCustomFields[F]
+  def entities: OEntities[F]
   def clientSettings: OClientSettings[F]
   def totp: OTotp[F]
   def share: OShare[F]
@@ -110,6 +111,7 @@ object BackendApp {
       )
       folderImpl <- OFolder(store)
       customFieldsImpl <- OCustomFields(store)
+      entitiesImpl <- OEntities(store)
       clientSettingsImpl <- OClientSettings(store)
       searchImpl <- Resource.pure(OSearch(store, ftsClient))
       shareImpl <- Resource.pure(
@@ -150,6 +152,7 @@ object BackendApp {
       val userTask = userTaskImpl
       val folder = folderImpl
       val customFields = customFieldsImpl
+      val entities = entitiesImpl
       val clientSettings = clientSettingsImpl
       val totp = totpImpl
       val share = shareImpl
