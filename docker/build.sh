@@ -19,6 +19,7 @@ docker run --rm --user "$(id -u):$(id -g)" \
   -v "$cache:/cache" -v "$PWD:/src" \
   docspell-ng-builder \
   sbt "set webapp/elmCompileMode := ElmCompileMode.Production" \
+      "set restserver/bundleDocs := true" \
       "set webapp/stylesMode := StylesMode.Prod" \
       make-zip
 

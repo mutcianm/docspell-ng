@@ -5,6 +5,9 @@ import de.heikoseeberger.sbtheader.CommentBlockCreator
 
 val toolsPackage = taskKey[Seq[File]]("Package the scripts/extension tools")
 val elmCompileMode = settingKey[ElmCompileMode]("How to compile elm sources")
+val bundleDocs = settingKey[Boolean](
+  "Build the documentation site into the restserver, served at /docs (needs zola, yarn, redocly)"
+)
 
 // --- Settings
 
@@ -905,6 +908,33 @@ val restserver = project
     Compile / unmanagedResourceDirectories ++= Seq(
       (Compile / resourceDirectory).value.getParentFile / "templates"
     ),
+    bundleDocs := false,
+    Compile / resourceGenerators += Def.taskDyn {
+      if (!bundleDocs.value) Def.task(Seq.empty[File])
+      else
+        Def.task {
+          val logger = streams.value.log
+          val _ = (
+            (LocalProject("website") / Compile / resources).value,
+            (LocalProject("website") / zolaPrepare).value
+          )
+          val built = target.value / "docs-site"
+          // root-relative links: the docs are served from the server root, next to /app
+          ZolaPlugin.buildSite(
+            (LocalProject("website") / zolaCommand).value,
+            (LocalProject("website") / zolaRootDir).value,
+            built,
+            Some("/"),
+            logger
+          )
+          val out = (Compile / resourceManaged).value / "META-INF" / "docs-site"
+          IO.delete(out)
+          IO.copyDirectory(built, out)
+          // only the landing page uses the demo videos, and "/" redirects to the app
+          IO.delete(out / "videos")
+          (out ** "*").get.filter(_.isFile)
+        }
+    }.taskValue,
     reStart / javaOptions ++= Seq(
       s"-Dconfig.file=${(LocalRootProject / baseDirectory).value / "local" / "dev.conf"}",
       "-Xmx150M",

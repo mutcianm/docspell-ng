@@ -20,6 +20,11 @@ Docker host, the deployment directory and the PostgreSQL container name.
    directly on `TARGET_DOCKER_HOST`, so no registry is needed. A dirty working
    tree gets a `-dirty` suffix on the tag.
 
+The restserver zip includes the documentation site from `website/`, built with Zola
+and served at `/docs` (`set restserver/bundleDocs := true`; the builder image has
+zola, yarn and redocly for it). Builds without that setting skip the docs and
+`/docs` returns 404.
+
 The joex image replaces the distribution's Tesseract models with the more accurate
 `tessdata_best` models for the languages in `TESSDATA_BEST_LANGS` (default: `eng osd`).
 Each model adds about 10–15 MB to the image, and OCR with them takes about twice as long.
