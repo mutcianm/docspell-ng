@@ -8,7 +8,7 @@ package docspell.query
 
 import cats.data.NonEmptyList
 
-import docspell.query.internal.{ExprParser, ExprString, ExprUtil}
+import docspell.query.internal.{BasicParser, Constants, ExprParser, ExprString, ExprUtil}
 
 object ItemQueryParser {
 
@@ -37,6 +37,13 @@ object ItemQueryParser {
         .map(ParseFailure.fromError(in))
         .map(q => q.copy(expr = ExprUtil.reduce(expandMacros)(q.expr)))
     }
+
+  /** Whether a role or entity type name can be used in `<role>:` and `<type>.<attr>:`
+    * expressions.
+    */
+  def isUsableName(name: String): Boolean =
+    name.nonEmpty && name.forall(BasicParser.nameChars.contains) &&
+      !Constants.reserved.contains(name.toLowerCase)
 
   def parseUnsafe(input: String): ItemQuery =
     parse(input).fold(m => sys.error(m.render), identity)

@@ -12,6 +12,7 @@ import cats.implicits._
 
 import docspell.backend.ops.OEntities._
 import docspell.common._
+import docspell.query.ItemQueryParser
 import docspell.store.Store
 import docspell.store.qb.DML
 import docspell.store.qb.DSL._
@@ -119,6 +120,20 @@ object OEntities {
   private def lift[A](fa: ConnectionIO[A]): Check[A] =
     EitherT.liftF(fa)
 
+  // role and type names appear in queries as `<role>:` and `<type>.<attr>:`
+  private def usableName(name: Ident): Check[Unit] =
+    check(
+      ItemQueryParser.isUsableName(name.id),
+      s"'${name.id}' cannot be used as a name: it must not contain dots or be a search keyword."
+    )
+
+  // attribute names appear in queries as `<type>.<attr>:`, and `<role>.id` is taken
+  private def usableAttrName(name: Ident): Check[Unit] =
+    check(
+      !name.id.contains('.') && !name.id.equalsIgnoreCase("id"),
+      s"'${name.id}' cannot be used as an attribute name."
+    )
+
   def apply[F[_]](store: Store[F]): Resource[F, OEntities[F]] =
     Resource.pure[F, OEntities[F]](new OEntities[F] {
       private def run(c: Check[Ident]): F[Result] =
@@ -144,6 +159,7 @@ object OEntities {
 
       def createType(coll: CollectiveId, in: NewType): F[Result] =
         run(for {
+          _ <- usableName(in.name)
           _ <- nameFree(coll, in.name, None)
           id <- lift(Ident.randomId[ConnectionIO])
           now <- lift(Timestamp.current[ConnectionIO])
@@ -158,6 +174,7 @@ object OEntities {
         run(for {
           t <- found(REntityType.findById(id, coll))
           _ <- check(!t.builtin || t.name == in.name, "Built-in types cannot be renamed.")
+          _ <- usableName(in.name)
           _ <- nameFree(coll, in.name, Some(id))
           _ <- lift(
             REntityType.update(
@@ -193,6 +210,7 @@ object OEntities {
       def createAttr(coll: CollectiveId, typeId: Ident, in: NewAttr): F[Result] =
         run(for {
           _ <- found(REntityType.findById(typeId, coll))
+          _ <- usableAttrName(in.name)
           _ <- attrNameFree(typeId, in.name, None)
           id <- lift(Ident.randomId[ConnectionIO])
           now <- lift(Timestamp.current[ConnectionIO])
@@ -222,6 +240,7 @@ object OEntities {
       ): F[Result] =
         run(for {
           a <- findAttr(coll, typeId, id)
+          _ <- usableAttrName(in.name)
           _ <- attrNameFree(typeId, in.name, Some(id))
           values <- lift(REntityAttr.findByAttrDef(id))
           _ <- check(
@@ -266,6 +285,7 @@ object OEntities {
           self: Option[Ident]
       ): Check[Unit] =
         for {
+          _ <- usableName(in.name)
           roles <- lift(REntityRole.findAll(coll))
           _ <- check(
             !roles.exists(r => r.name == in.name && !self.contains(r.id)),

@@ -85,6 +85,28 @@ class OEntitiesTest extends DatabaseTest {
     }
   }
 
+  test("names must be usable in queries") {
+    val store = h2Store()
+    OEntities(store).use { ops =>
+      for {
+        fx <- prepare(store)
+        cid = fx._1
+        keyword <- ops.createType(cid, NewType(id("tag"), None, true))
+        dotted <- ops.createRole(cid, NewRole(id("a.b"), None, true, false, Nil))
+        plain <- ops.createType(cid, NewType(id("vehicle"), None, true)).map(created)
+        idAttr <- ops.createAttr(
+          cid,
+          plain,
+          NewAttr(id("ID"), None, CustomFieldType.text, false, EntityMatcher.none)
+        )
+      } yield {
+        assertInvalid(keyword)
+        assertInvalid(dotted)
+        assertInvalid(idAttr)
+      }
+    }
+  }
+
   test("attribute values are validated against their definitions") {
     val store = h2Store()
     OEntities(store).use { ops =>
