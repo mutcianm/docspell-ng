@@ -7,6 +7,7 @@
 package docspell.store.records
 
 import cats.data.{NonEmptyList, OptionT}
+import cats.syntax.flatMap._
 import fs2.Stream
 
 import docspell.common._
@@ -65,6 +66,7 @@ object RCollective {
       )
       .update
       .withUniqueGeneratedKeys[CollectiveId](T.id.name)
+      .flatTap(cid => EntityBuiltins.create(cid, value.created))
 
   def update(value: RCollective): ConnectionIO[Int] =
     DML.update(
