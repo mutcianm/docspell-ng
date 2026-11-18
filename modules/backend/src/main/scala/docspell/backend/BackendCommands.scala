@@ -82,25 +82,25 @@ private[backend] class BackendCommands[F[_]: Sync](
         logger.debug(
           s"Set correspondent organization ${id.map(_.id)} for $collective"
         ) *>
-          itemOps.setCorrOrg(Nel.of(item), id, collective).void
+          itemOps.setEntityOfKind(item, MetaProposalType.CorrOrg, id, collective)
 
       case ItemAction.SetCorrPerson(id) =>
         logger.debug(
           s"Set correspondent person ${id.map(_.id)} for $collective"
         ) *>
-          itemOps.setCorrPerson(Nel.of(item), id, collective).void
+          itemOps.setEntityOfKind(item, MetaProposalType.CorrPerson, id, collective)
 
       case ItemAction.SetConcPerson(id) =>
         logger.debug(
           s"Set concerning person ${id.map(_.id)} for $collective"
         ) *>
-          itemOps.setConcPerson(Nel.of(item), id, collective).void
+          itemOps.setEntityOfKind(item, MetaProposalType.ConcPerson, id, collective)
 
       case ItemAction.SetConcEquipment(id) =>
         logger.debug(
           s"Set concerning equipment ${id.map(_.id)} for $collective"
         ) *>
-          itemOps.setConcEquip(Nel.of(item), id, collective).void
+          itemOps.setEntityOfKind(item, MetaProposalType.ConcEquip, id, collective)
 
       case ItemAction.SetField(field, value) =>
         logger.debug(

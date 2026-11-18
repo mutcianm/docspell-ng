@@ -175,38 +175,6 @@ object ItemMultiRoutes extends NonEmptyListSupport with MultiIdSupport {
           }
         } yield resp
 
-      case req @ PUT -> Root / "corrOrg" =>
-        for {
-          json <- req.as[ItemsAndRef]
-          items <- requireNonEmpty(json.items)
-          res <- backend.item.setCorrOrg(items, json.ref, user.account.collectiveId)
-          resp <- Ok(Conversions.basicResult(res, "Correspondent organization updated"))
-        } yield resp
-
-      case req @ PUT -> Root / "corrPerson" =>
-        for {
-          json <- req.as[ItemsAndRef]
-          items <- requireNonEmpty(json.items)
-          res <- backend.item.setCorrPerson(items, json.ref, user.account.collectiveId)
-          resp <- Ok(Conversions.basicResult(res, "Correspondent person updated"))
-        } yield resp
-
-      case req @ PUT -> Root / "concPerson" =>
-        for {
-          json <- req.as[ItemsAndRef]
-          items <- requireNonEmpty(json.items)
-          res <- backend.item.setConcPerson(items, json.ref, user.account.collectiveId)
-          resp <- Ok(Conversions.basicResult(res, "Concerned person updated"))
-        } yield resp
-
-      case req @ PUT -> Root / "concEquipment" =>
-        for {
-          json <- req.as[ItemsAndRef]
-          items <- requireNonEmpty(json.items)
-          res <- backend.item.setConcEquip(items, json.ref, user.account.collectiveId)
-          resp <- Ok(Conversions.basicResult(res, "Concerned equipment updated"))
-        } yield resp
-
       case req @ POST -> Root / "reprocess" =>
         for {
           json <- req.as[IdList]

@@ -20,7 +20,7 @@ import docspell.logging.Logger
 import docspell.notification.api.Event
 import docspell.scheduler.JobStore
 import docspell.scheduler.usertask.UserTaskScope
-import docspell.store.queries.{QAttachment, QItem, QMoveAttachment}
+import docspell.store.queries.{QAttachment, QEntity, QItem, QMoveAttachment}
 import docspell.store.records._
 import docspell.store.{AddResult, Store, UpdateResult}
 
@@ -85,6 +85,16 @@ trait OItem[F[_]] {
       collective: CollectiveId
   ): F[AttachedEvent[UpdateResult]]
 
+  /** Sets or clears one entity of the kind's built-in type: correspondents under sender
+    * (incoming) or recipient (outgoing), others under concerning.
+    */
+  def setEntityOfKind(
+      item: Ident,
+      kind: MetaProposalType,
+      entity: Option[Ident],
+      collective: CollectiveId
+  ): F[Unit]
+
   def setDirection(
       item: Nel[Ident],
       direction: Direction,
@@ -104,38 +114,6 @@ trait OItem[F[_]] {
       folder: Option[String],
       collective: CollectiveId
   ): F[UpdateResult]
-
-  def setCorrOrg(
-      items: Nel[Ident],
-      org: Option[Ident],
-      collective: CollectiveId
-  ): F[UpdateResult]
-
-  def addCorrOrg(item: Ident, org: OOrganization.OrgAndContacts): F[AddResult]
-
-  def setCorrPerson(
-      items: Nel[Ident],
-      person: Option[Ident],
-      collective: CollectiveId
-  ): F[UpdateResult]
-
-  def addCorrPerson(item: Ident, person: OOrganization.PersonAndContacts): F[AddResult]
-
-  def setConcPerson(
-      items: Nel[Ident],
-      person: Option[Ident],
-      collective: CollectiveId
-  ): F[UpdateResult]
-
-  def addConcPerson(item: Ident, person: OOrganization.PersonAndContacts): F[AddResult]
-
-  def setConcEquip(
-      items: Nel[Ident],
-      equip: Option[Ident],
-      collective: CollectiveId
-  ): F[UpdateResult]
-
-  def addConcEquip(item: Ident, equip: REquipment): F[AddResult]
 
   def setNotes(
       item: Ident,
@@ -255,8 +233,6 @@ object OItem {
   ): Resource[F, OItem[F]] =
     for {
       otag <- OTag(store)
-      oorg <- OOrganization(store)
-      oequip <- OEquipment(store)
       logger <- Resource.pure[F, Logger[F]](docspell.logging.getLogger[F])
       oitem <- Resource.pure[F, OItem[F]](new OItem[F] {
 
@@ -460,6 +436,35 @@ object OItem {
               AttachedEvent.only(AddResult.Failure(new Exception("Collective mismatch")))
             )
 
+        def setEntityOfKind(
+            item: Ident,
+            kind: MetaProposalType,
+            entity: Option[Ident],
+            collective: CollectiveId
+        ): F[Unit] =
+          store
+            .transact(
+              OptionT(RItem.findByIdAndCollective(item, collective)).semiflatMap { ri =>
+                val corr =
+                  if (ri.direction == Direction.Incoming) REntityRole.Key.sender
+                  else REntityRole.Key.recipient
+                val target = kind match {
+                  case MetaProposalType.CorrOrg =>
+                    Some((corr, REntityType.Key.organization))
+                  case MetaProposalType.CorrPerson => Some((corr, REntityType.Key.person))
+                  case MetaProposalType.ConcPerson =>
+                    Some((REntityRole.Key.concerning, REntityType.Key.person))
+                  case MetaProposalType.ConcEquip =>
+                    Some((REntityRole.Key.concerning, REntityType.Key.equipment))
+                  case _ => None
+                }
+                target.traverse_ { case (role, etype) =>
+                  QEntity.setLinkOfType(item, collective, role, etype, entity)
+                }
+              }.value
+            )
+            .void
+
         def setDirection(
             items: Nel[Ident],
             direction: Direction,
@@ -467,7 +472,13 @@ object OItem {
         ): F[UpdateResult] =
           UpdateResult.fromUpdate(
             store
-              .transact(RItem.updateDirection(items, collective, direction))
+              .transact(
+                RItem
+                  .updateDirection(items, collective, direction)
+                  .flatTap(_ =>
+                    items.traverse_(QEntity.refreshItemColumns(_, collective))
+                  )
+              )
           )
 
         def setFolder(
@@ -510,147 +521,6 @@ object OItem {
                 UpdateResult.failure(new Exception("All items failed to update"))
               else UpdateResult.success
           } yield res
-
-        def setCorrOrg(
-            items: Nel[Ident],
-            org: Option[Ident],
-            collective: CollectiveId
-        ): F[UpdateResult] =
-          UpdateResult.fromUpdate(
-            store
-              .transact(RItem.updateCorrOrg(items, collective, org))
-          )
-
-        def addCorrOrg(item: Ident, org: OOrganization.OrgAndContacts): F[AddResult] =
-          (for {
-            _ <- OptionT(store.transact(RItem.getCollective(item)))
-              .filter(_ == org.org.cid)
-            addres <- OptionT.liftF(oorg.addOrg(org))
-            _ <- addres match {
-              case AddResult.Success =>
-                OptionT.liftF(
-                  store.transact(
-                    RItem.updateCorrOrg(
-                      Nel.of(item),
-                      org.org.cid,
-                      Some(org.org.oid)
-                    )
-                  )
-                )
-              case AddResult.EntityExists(_) =>
-                OptionT.pure[F](0)
-              case AddResult.Failure(_) =>
-                OptionT.pure[F](0)
-            }
-          } yield addres)
-            .getOrElse(AddResult.Failure(new Exception("Collective mismatch")))
-
-        def setCorrPerson(
-            items: Nel[Ident],
-            person: Option[Ident],
-            collective: CollectiveId
-        ): F[UpdateResult] =
-          UpdateResult.fromUpdate(
-            store
-              .transact(RItem.updateCorrPerson(items, collective, person))
-          )
-
-        def addCorrPerson(
-            item: Ident,
-            person: OOrganization.PersonAndContacts
-        ): F[AddResult] =
-          (for {
-            _ <- OptionT(store.transact(RItem.getCollective(item)))
-              .filter(_ == person.person.cid)
-            addres <- OptionT.liftF(oorg.addPerson(person))
-            _ <- addres match {
-              case AddResult.Success =>
-                OptionT.liftF(
-                  store.transact(
-                    RItem
-                      .updateCorrPerson(
-                        Nel.of(item),
-                        person.person.cid,
-                        Some(person.person.pid)
-                      )
-                  )
-                )
-              case AddResult.EntityExists(_) =>
-                OptionT.pure[F](0)
-              case AddResult.Failure(_) =>
-                OptionT.pure[F](0)
-            }
-          } yield addres)
-            .getOrElse(AddResult.Failure(new Exception("Collective mismatch")))
-
-        def setConcPerson(
-            items: Nel[Ident],
-            person: Option[Ident],
-            collective: CollectiveId
-        ): F[UpdateResult] =
-          UpdateResult.fromUpdate(
-            store
-              .transact(RItem.updateConcPerson(items, collective, person))
-          )
-
-        def addConcPerson(
-            item: Ident,
-            person: OOrganization.PersonAndContacts
-        ): F[AddResult] =
-          (for {
-            _ <- OptionT(store.transact(RItem.getCollective(item)))
-              .filter(_ == person.person.cid)
-            addres <- OptionT.liftF(oorg.addPerson(person))
-            _ <- addres match {
-              case AddResult.Success =>
-                OptionT.liftF(
-                  store.transact(
-                    RItem
-                      .updateConcPerson(
-                        Nel.of(item),
-                        person.person.cid,
-                        Some(person.person.pid)
-                      )
-                  )
-                )
-              case AddResult.EntityExists(_) =>
-                OptionT.pure[F](0)
-              case AddResult.Failure(_) =>
-                OptionT.pure[F](0)
-            }
-          } yield addres)
-            .getOrElse(AddResult.Failure(new Exception("Collective mismatch")))
-
-        def setConcEquip(
-            items: Nel[Ident],
-            equip: Option[Ident],
-            collective: CollectiveId
-        ): F[UpdateResult] =
-          UpdateResult.fromUpdate(
-            store
-              .transact(RItem.updateConcEquip(items, collective, equip))
-          )
-
-        def addConcEquip(item: Ident, equip: REquipment): F[AddResult] =
-          (for {
-            _ <- OptionT(store.transact(RItem.getCollective(item)))
-              .filter(_ == equip.cid)
-            addres <- OptionT.liftF(oequip.add(equip))
-            _ <- addres match {
-              case AddResult.Success =>
-                OptionT.liftF(
-                  store.transact(
-                    RItem
-                      .updateConcEquip(Nel.of(item), equip.cid, Some(equip.eid))
-                  )
-                )
-              case AddResult.EntityExists(_) =>
-                OptionT.pure[F](0)
-              case AddResult.Failure(_) =>
-                OptionT.pure[F](0)
-            }
-          } yield addres)
-            .getOrElse(AddResult.Failure(new Exception("Collective mismatch")))
 
         def setNotes(
             item: Ident,
