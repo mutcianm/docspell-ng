@@ -26,6 +26,7 @@ import Api.Model.ReferenceList exposing (ReferenceList)
 import Comp.CustomFieldMultiInput
 import Comp.DatePicker
 import Comp.DetailEdit
+import Comp.ItemLinksMulti
 import Comp.Dropdown exposing (isDropdownChangeMsg)
 import Comp.ItemDetail.FieldTabState as FTabState exposing (EditTab(..), tabName)
 import Comp.ItemDetail.FormChange exposing (FormChange(..))
@@ -91,6 +92,7 @@ type alias Model =
     , tagEditMode : TagEditMode
     , customFieldModel : Comp.CustomFieldMultiInput.Model
     , openTabs : Set String
+    , linksModel : Comp.ItemLinksMulti.Model
     }
 
 
@@ -109,6 +111,7 @@ type Msg
     | CorrPersonMsg (Comp.Dropdown.Msg IdName)
     | ConcPersonMsg (Comp.Dropdown.Msg IdName)
     | ConcEquipMsg (Comp.Dropdown.Msg IdName)
+    | ItemLinksMultiMsg Comp.ItemLinksMulti.Msg
     | GetOrgResp (Result Http.Error ReferenceList)
     | GetPersonResp (Result Http.Error PersonList)
     | GetEquipResp (Result Http.Error EquipmentList)
@@ -140,6 +143,7 @@ init =
     , tagEditMode = AddTags
     , customFieldModel = Comp.CustomFieldMultiInput.initWith []
     , openTabs = Set.empty
+    , linksModel = Comp.ItemLinksMulti.empty
     }
 
 
@@ -161,6 +165,7 @@ loadModel flags =
         , Cmd.map ItemDatePickerMsg dpc
         , Cmd.map DueDatePickerMsg dpc
         , Cmd.map TagDropdownMsg tc
+        , Cmd.map ItemLinksMultiMsg (Comp.ItemLinksMulti.init flags)
         ]
 
 
@@ -408,6 +413,22 @@ update flags msg model =
 
         GetPersonResp (Err _) ->
             resultNone model
+
+        ItemLinksMultiMsg lm ->
+            let
+                ( lmm, lmc, change ) =
+                    Comp.ItemLinksMulti.update lm model.linksModel
+            in
+            UpdateResult { model | linksModel = lmm }
+                (Cmd.map ItemLinksMultiMsg lmc)
+                Sub.none
+                (case change of
+                    Just c ->
+                        LinksChange c.roleId c.entities c.mode
+
+                    Nothing ->
+                        NoFormChange
+                )
 
         ConcEquipMsg m ->
             let
@@ -793,69 +814,16 @@ renderEditForm2 texts flags cfg settings model =
                     ]
               }
             , { name = tabName TabCorrespondent
-              , title = texts.basics.correspondent
+              , title = texts.linkedEntities
               , titleRight = []
               , info = Nothing
               , body =
-                    [ optional [ Data.Fields.CorrOrg ] <|
-                        div [ class "mb-4" ]
-                            [ label [ class S.inputLabel ]
-                                [ Icons.organizationIcon ""
-                                , span [ class "ml-2" ]
-                                    [ text texts.basics.organization
-                                    ]
-                                ]
-                            , Html.map OrgDropdownMsg
-                                (Comp.Dropdown.view2
-                                    idNameCfg
-                                    settings
-                                    model.corrOrgModel
-                                )
-                            ]
-                    , optional [ Data.Fields.CorrPerson ] <|
-                        div [ class "mb-4" ]
-                            [ label [ class S.inputLabel ]
-                                [ Icons.personIcon ""
-                                , span [ class "ml-2" ]
-                                    [ text texts.basics.person
-                                    ]
-                                ]
-                            , Html.map CorrPersonMsg
-                                (Comp.Dropdown.view2
-                                    idNameCfg
-                                    settings
-                                    model.corrPersonModel
-                                )
-                            ]
-                    ]
-              }
-            , { name = tabName TabConcerning
-              , title = texts.basics.concerning
-              , titleRight = []
-              , info = Nothing
-              , body =
-                    [ optional [ Data.Fields.ConcPerson ] <|
-                        div [ class "mb-4" ]
-                            [ label [ class S.inputLabel ]
-                                [ Icons.personIcon ""
-                                , span [ class "ml-2" ]
-                                    [ text texts.basics.person ]
-                                ]
-                            , Html.map ConcPersonMsg (Comp.Dropdown.view2 idNameCfg settings model.concPersonModel)
-                            ]
-                    , optional [ Data.Fields.ConcEquip ] <|
-                        div [ class "mb-4" ]
-                            [ label [ class S.inputLabel ]
-                                [ Icons.equipmentIcon ""
-                                , span [ class "ml-2" ]
-                                    [ text texts.basics.equipment ]
-                                ]
-                            , Html.map ConcEquipMsg
-                                (Comp.Dropdown.view2 idNameCfg
-                                    settings
-                                    model.concEquipModel
-                                )
-                            ]
+                    [ Html.map ItemLinksMultiMsg
+                        (Comp.ItemLinksMulti.view
+                            { placeholder = texts.chooseEntity, modeLabel = texts.linkMode }
+                            settings
+                            model.linksModel
+                        )
                     ]
               }
             , { name = tabName TabDirection

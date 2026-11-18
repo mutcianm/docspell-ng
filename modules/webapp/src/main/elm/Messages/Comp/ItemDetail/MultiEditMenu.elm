@@ -24,6 +24,9 @@ type alias Texts =
     , customFieldMultiInput : Messages.Comp.CustomFieldMultiInput.Texts
     , tagDropdown : Messages.Comp.TagDropdown.Texts
     , tagModeAddInfo : String
+    , linkedEntities : String
+    , chooseEntity : String
+    , linkMode : String -> String
     , tagModeRemoveInfo : String
     , tagModeReplaceInfo : String
     , chooseDirection : String
@@ -41,6 +44,19 @@ gb =
     { basics = Messages.Basics.gb
     , customFieldMultiInput = Messages.Comp.CustomFieldMultiInput.gb
     , tagDropdown = Messages.Comp.TagDropdown.gb
+    , linkedEntities = "Linked entities"
+    , chooseEntity = "Choose…"
+    , linkMode =
+        \m ->
+            case m of
+                "replace" ->
+                    "Replace"
+
+                "remove" ->
+                    "Remove"
+
+                _ ->
+                    "Add"
     , tagModeAddInfo = "Tags chosen here are *added* to all selected items."
     , tagModeRemoveInfo = "Tags chosen here are *removed* from all selected items."
     , tagModeReplaceInfo = "Tags chosen here *replace* those on selected items."
@@ -59,6 +75,19 @@ de =
     { basics = Messages.Basics.de
     , customFieldMultiInput = Messages.Comp.CustomFieldMultiInput.de
     , tagDropdown = Messages.Comp.TagDropdown.de
+    , linkedEntities = "Verknüpfte Einträge"
+    , chooseEntity = "Auswählen…"
+    , linkMode =
+        \m ->
+            case m of
+                "replace" ->
+                    "Ersetzen"
+
+                "remove" ->
+                    "Entfernen"
+
+                _ ->
+                    "Hinzufügen"
     , tagModeAddInfo = "Tags werden zu gewählten Dokumenten *hinzugefügt*."
     , tagModeRemoveInfo = "Tags werden von gewählten Dokumenten *entfernt*."
     , tagModeReplaceInfo = "Tags *ersetzen* die der gewählten Dokumente."
@@ -77,6 +106,19 @@ fr =
     { basics = Messages.Basics.fr
     , customFieldMultiInput = Messages.Comp.CustomFieldMultiInput.fr
     , tagDropdown = Messages.Comp.TagDropdown.fr
+    , linkedEntities = "Entrées liées"
+    , chooseEntity = "Choisir…"
+    , linkMode =
+        \m ->
+            case m of
+                "replace" ->
+                    "Remplacer"
+
+                "remove" ->
+                    "Retirer"
+
+                _ ->
+                    "Ajouter"
     , tagModeAddInfo = "Les tags choisis ici sont *attribués* aux documents sélectionnés"
     , tagModeRemoveInfo = "Les tags choisis ici sont *supprimés* des documents sélectionnés"
     , tagModeReplaceInfo = "Les tags choisis ici *remplacent* ceux des documents sélectionnés"

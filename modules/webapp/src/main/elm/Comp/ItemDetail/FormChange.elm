@@ -45,6 +45,7 @@ type FormChange
     | ConfirmChange Bool
     | CustomValueChange CustomField String
     | RemoveCustomValue CustomField
+    | LinksChange String (List String) String
 
 
 multiUpdate :
@@ -59,6 +60,9 @@ multiUpdate flags ids change receive =
             Data.ItemIds.toList ids
     in
     case change of
+        LinksChange roleId entities mode ->
+            Api.changeItemLinksMultiple flags roleId { items = items, entities = entities, mode = mode } receive
+
         CustomValueChange field value ->
             let
                 data =
