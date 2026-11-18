@@ -6,6 +6,7 @@
 
 package docspell.backend.ops
 
+import cats.data.NonEmptyList
 import cats.effect._
 
 import docspell.backend.ops.OEntities._
@@ -249,6 +250,57 @@ class OEntitiesTest extends DatabaseTest {
         )
         assertInvalid(narrow)
         assertEquals(afterDelete.map(_.entity.name).toSet, Set("Acme", "Car"))
+      }
+    }
+  }
+
+  test("links change on several items at once, all or none") {
+    val store = h2Store()
+    OEntities(store).use { ops =>
+      for {
+        fx <- prepare(store)
+        (cid, item1) = fx
+        item2 <- Ident.randomId[IO]
+        i2 <- RItem
+          .newItem[IO](cid, "item2", "test", Direction.Incoming, ItemState.Created)
+        _ <- store.transact(RItem.insert(i2.copy(id = item2)))
+        types <- ops.findTypes(cid)
+        typeId = (k: Ident) => types.find(_.entityType.key.contains(k)).get.entityType.id
+        roles <- ops.findRoles(cid)
+        sender = roles.find(_.role.key.contains(REntityRole.Key.sender)).get.role.id
+        orgType = typeId(REntityType.Key.organization)
+        a <- ops.createEntity(cid, NewEntity(orgType, "A", None, true, Nil)).map(created)
+        b <- ops.createEntity(cid, NewEntity(orgType, "B", None, true, Nil)).map(created)
+        car <- ops
+          .createEntity(
+            cid,
+            NewEntity(typeId(REntityType.Key.equipment), "Car", None, true, Nil)
+          )
+          .map(created)
+        items = NonEmptyList.of(item1, item2)
+        _ <- ops.setItemLinks(cid, item1, sender, List(a)).map(created)
+        _ <- ops.changeItemLinks(cid, items, sender, List(b), LinkMode.Add).map(created)
+        afterAdd <- items.traverse(i =>
+          ops.findItemLinks(cid, i).map(_.map(_.entity.name).toSet)
+        )
+        rejected <- ops.changeItemLinks(cid, items, sender, List(car), LinkMode.Add)
+        afterRejected <- items.traverse(i =>
+          ops.findItemLinks(cid, i).map(_.map(_.entity.name).toSet)
+        )
+        _ <- ops
+          .changeItemLinks(cid, items, sender, List(a), LinkMode.Remove)
+          .map(created)
+        afterRemove <- items.traverse(i =>
+          ops.findItemLinks(cid, i).map(_.map(_.entity.name).toSet)
+        )
+        _ <- ops.changeItemLinks(cid, items, sender, Nil, LinkMode.Replace).map(created)
+        afterClear <- items.traverse(i => ops.findItemLinks(cid, i).map(_.size))
+      } yield {
+        assertEquals(afterAdd.toList, List(Set("A", "B"), Set("B")))
+        assertInvalid(rejected)
+        assertEquals(afterRejected, afterAdd)
+        assertEquals(afterRemove.toList, List(Set("B"), Set("B")))
+        assertEquals(afterClear.toList, List(0, 0))
       }
     }
   }

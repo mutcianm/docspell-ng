@@ -6,7 +6,7 @@
 
 package docspell.backend.ops
 
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import cats.effect._
 import cats.implicits._
 
@@ -63,6 +63,17 @@ trait OEntities[F[_]] {
       roleId: Ident,
       entities: List[Ident]
   ): F[Result]
+
+  /** Adds, replaces or removes entities linked under the role on all given items. Either
+    * all items change or none.
+    */
+  def changeItemLinks(
+      coll: CollectiveId,
+      items: NonEmptyList[Ident],
+      roleId: Ident,
+      entities: List[Ident],
+      mode: LinkMode
+  ): F[Result]
 }
 
 object OEntities {
@@ -95,6 +106,21 @@ object OEntities {
       suggest: Boolean,
       attrs: List[(Ident, String)]
   )
+
+  sealed trait LinkMode
+  object LinkMode {
+    case object Add extends LinkMode
+    case object Replace extends LinkMode
+    case object Remove extends LinkMode
+
+    def fromString(s: String): Either[String, LinkMode] =
+      s.toLowerCase match {
+        case "add"     => Right(Add)
+        case "replace" => Right(Replace)
+        case "remove"  => Right(Remove)
+        case _         => Left(s"Unknown link mode: $s")
+      }
+  }
 
   sealed trait Result
   object Result {
@@ -497,7 +523,42 @@ object OEntities {
           roleId: Ident,
           entities: List[Ident]
       ): F[Result] =
-        run(for {
+        run(replaceLinks(coll, item, roleId, entities).map(_ => item))
+
+      def changeItemLinks(
+          coll: CollectiveId,
+          items: NonEmptyList[Ident],
+          roleId: Ident,
+          entities: List[Ident],
+          mode: LinkMode
+      ): F[Result] =
+        run(
+          items.toList
+            .traverse_ { item =>
+              for {
+                current <- lift(
+                  RItemEntity
+                    .findByItem(item)
+                    .map(_.filter(_.roleId == roleId).map(_.entityId))
+                )
+                next = mode match {
+                  case LinkMode.Add     => (current ++ entities).distinct.toList
+                  case LinkMode.Replace => entities
+                  case LinkMode.Remove  => current.filterNot(entities.contains).toList
+                }
+                _ <- replaceLinks(coll, item, roleId, next)
+              } yield ()
+            }
+            .map(_ => roleId)
+        )
+
+      private def replaceLinks(
+          coll: CollectiveId,
+          item: Ident,
+          roleId: Ident,
+          entities: List[Ident]
+      ): Check[Unit] =
+        for {
           _ <- found(RItem.findByIdAndCollective(item, coll))
           role <- found(REntityRole.findById(roleId, coll))
           ids = entities.distinct
@@ -528,6 +589,6 @@ object OEntities {
           _ <- lift(
             DML.update(RItem.T, RItem.T.id === item, DML.set(RItem.T.updated.setTo(now)))
           )
-        } yield item)
+        } yield ()
     })
 }
