@@ -899,73 +899,31 @@ object QItem extends FtsSupport {
     }
   }
 
-  def resolveTextAndCorrOrg(
+  /** The item's text and, as its label, the first entity of the given type linked under
+    * one of the roles.
+    */
+  def resolveTextAndLinkedEntity(
       collective: CollectiveId,
       itemId: Ident,
+      roleKeys: Nel[Ident],
+      typeKey: Ident,
       maxLen: Int,
       pageSep: String
   ): ConnectionIO[TextAndTag] =
-    readTextAndTag(collective, itemId, pageSep) {
-      Select(
-        select(contentMax(maxLen), org.oid.s, org.name.s),
+    for {
+      texts <- Select(
+        select(contentMax(maxLen)),
         from(i)
           .innerJoin(a, a.itemId === i.id)
-          .innerJoin(m, m.id === a.id)
-          .leftJoin(org, org.oid === i.corrOrg),
-        i.id === itemId && m.content.isNotNull && m.content <> ""
-      )
-    }
-
-  def resolveTextAndCorrPerson(
-      collective: CollectiveId,
-      itemId: Ident,
-      maxLen: Int,
-      pageSep: String
-  ): ConnectionIO[TextAndTag] =
-    readTextAndTag(collective, itemId, pageSep) {
-      Select(
-        select(contentMax(maxLen), pers0.pid.s, pers0.name.s),
-        from(i)
-          .innerJoin(a, a.itemId === i.id)
-          .innerJoin(m, m.id === a.id)
-          .leftJoin(pers0, pers0.pid === i.corrPerson),
-        i.id === itemId && m.content.isNotNull && m.content <> ""
-      )
-    }
-
-  def resolveTextAndConcPerson(
-      collective: CollectiveId,
-      itemId: Ident,
-      maxLen: Int,
-      pageSep: String
-  ): ConnectionIO[TextAndTag] =
-    readTextAndTag(collective, itemId, pageSep) {
-      Select(
-        select(contentMax(maxLen), pers0.pid.s, pers0.name.s),
-        from(i)
-          .innerJoin(a, a.itemId === i.id)
-          .innerJoin(m, m.id === a.id)
-          .leftJoin(pers0, pers0.pid === i.concPerson),
-        i.id === itemId && m.content.isNotNull && m.content <> ""
-      )
-    }
-
-  def resolveTextAndConcEquip(
-      collective: CollectiveId,
-      itemId: Ident,
-      maxLen: Int,
-      pageSep: String
-  ): ConnectionIO[TextAndTag] =
-    readTextAndTag(collective, itemId, pageSep) {
-      Select(
-        select(contentMax(maxLen), equip.eid.s, equip.name.s),
-        from(i)
-          .innerJoin(a, a.itemId === i.id)
-          .innerJoin(m, m.id === a.id)
-          .leftJoin(equip, equip.eid === i.concEquipment),
-        i.id === itemId && m.content.isNotNull && m.content <> ""
-      )
-    }
+          .innerJoin(m, m.id === a.id),
+        i.id === itemId && i.cid === collective && m.content.isNotNull && m.content <> ""
+      ).orderBy(a.position.asc).build.query[String].to[List]
+      tag <- QEntity.firstLinked(itemId, collective, roleKeys, typeKey)
+    } yield TextAndTag(
+      itemId,
+      texts.mkString(pageSep),
+      tag.map(r => TextAndTag.TagName(r.id, r.name))
+    )
 
   private def contentMax(maxLen: Int): SelectExpr =
     if (maxLen <= 0) {

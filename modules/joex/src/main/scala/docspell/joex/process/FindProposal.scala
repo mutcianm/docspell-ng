@@ -18,6 +18,7 @@ import docspell.common._
 import docspell.joex.Config
 import docspell.scheduler.{Context, Task}
 import docspell.store.Store
+import docspell.store.queries.QEntityLookup
 import docspell.store.records._
 
 /** Super simple approach to find corresponding meta data to an item by looking up values
@@ -55,8 +56,12 @@ object FindProposal {
         case MetaProposalType.CorrOrg =>
           store
             .transact(
-              ROrganization
-                .findLike(coll, mp.values.head.ref.name.toLowerCase, OrgUse.notDisabled)
+              QEntityLookup
+                .findLike(
+                  coll,
+                  REntityType.Key.organization,
+                  mp.values.head.ref.name.toLowerCase
+                )
                 .map(_.headOption)
             )
             .flatTap(oref =>
@@ -65,11 +70,11 @@ object FindProposal {
         case MetaProposalType.CorrPerson =>
           store
             .transact(
-              RPerson
+              QEntityLookup
                 .findLike(
                   coll,
-                  mp.values.head.ref.name.toLowerCase,
-                  PersonUse.correspondentAndBoth
+                  REntityType.Key.person,
+                  mp.values.head.ref.name.toLowerCase
                 )
                 .map(_.headOption)
             )
@@ -79,11 +84,11 @@ object FindProposal {
         case MetaProposalType.ConcPerson =>
           store
             .transact(
-              RPerson
+              QEntityLookup
                 .findLike(
                   coll,
-                  mp.values.head.ref.name.toLowerCase,
-                  PersonUse.concerningAndBoth
+                  REntityType.Key.person,
+                  mp.values.head.ref.name.toLowerCase
                 )
                 .map(_.headOption)
             )
@@ -93,11 +98,11 @@ object FindProposal {
         case MetaProposalType.ConcEquip =>
           store
             .transact(
-              REquipment
+              QEntityLookup
                 .findLike(
                   coll,
-                  mp.values.head.ref.name.toLowerCase,
-                  EquipmentUse.notDisabled
+                  REntityType.Key.equipment,
+                  mp.values.head.ref.name.toLowerCase
                 )
                 .map(_.headOption)
             )
@@ -254,36 +259,32 @@ object FindProposal {
           ctx.logger.debug(s"Looking for organizations: $value") *>
             store
               .transact(
-                ROrganization
-                  .findLike(ctx.args.meta.collective, value, OrgUse.notDisabled)
+                QEntityLookup
+                  .findLike(ctx.args.meta.collective, REntityType.Key.organization, value)
               )
               .map(MetaProposalList.from(MetaProposalType.CorrOrg, nt))
 
         case NerTag.Person =>
-          val s1 = store
+          val persons = store
             .transact(
-              RPerson
-                .findLike(ctx.args.meta.collective, value, PersonUse.concerningAndBoth)
+              QEntityLookup
+                .findLike(ctx.args.meta.collective, REntityType.Key.person, value)
             )
-            .map(MetaProposalList.from(MetaProposalType.ConcPerson, nt))
-          val s2 = store
-            .transact(
-              RPerson
-                .findLike(ctx.args.meta.collective, value, PersonUse.correspondentAndBoth)
+            .map(refs =>
+              MetaProposalList.from(MetaProposalType.ConcPerson, nt)(refs) |+|
+                MetaProposalList.from(MetaProposalType.CorrPerson, nt)(refs)
             )
-            .map(MetaProposalList.from(MetaProposalType.CorrPerson, nt))
-          val s3 =
+          val orgs =
             store
               .transact(
-                ROrganization
-                  .findLike(ctx.args.meta.collective, value, OrgUse.notDisabled)
+                QEntityLookup
+                  .findLike(ctx.args.meta.collective, REntityType.Key.organization, value)
               )
               .map(MetaProposalList.from(MetaProposalType.CorrOrg, nt))
           ctx.logger.debug(s"Looking for persons and organizations: $value") *> (for {
-            ml0 <- s1
-            ml1 <- s2
-            ml2 <- s3
-          } yield ml0 |+| ml1 |+| ml2)
+            ml0 <- persons
+            ml1 <- orgs
+          } yield ml0 |+| ml1)
 
         case NerTag.Location =>
           ctx.logger
@@ -294,13 +295,13 @@ object FindProposal {
           ctx.logger.debug(s"Looking for equipments: $value") *>
             store
               .transact(
-                REquipment
-                  .findLike(ctx.args.meta.collective, value, EquipmentUse.notDisabled)
+                QEntityLookup
+                  .findLike(ctx.args.meta.collective, REntityType.Key.equipment, value)
               )
               .map(MetaProposalList.from(MetaProposalType.ConcEquip, nt))
 
         case NerTag.Email =>
-          searchContact(nt, ContactKind.Email, value, ctx, store)
+          searchContact(nt, EntityMatcher.email, value, ctx, store)
 
         case NerTag.Website =>
           if (!exact) {
@@ -310,9 +311,9 @@ object FindProposal {
               .map(_.toPrimaryDomain.asString)
               .map(s => s"%$s%")
               .getOrElse(value)
-            searchContact(nt, ContactKind.Website, searchString, ctx, store)
+            searchContact(nt, EntityMatcher.website, searchString, ctx, store)
           } else
-            searchContact(nt, ContactKind.Website, value, ctx, store)
+            searchContact(nt, EntityMatcher.website, value, ctx, store)
 
         case NerTag.Date =>
           // There is no database search required for this tag
@@ -322,29 +323,23 @@ object FindProposal {
 
   private def searchContact[F[_]: Sync](
       nt: NerLabel,
-      kind: ContactKind,
+      matcher: EntityMatcher,
       value: String,
       ctx: Context[F, ProcessItemArgs],
       store: Store[F]
   ): F[MetaProposalList] = {
+    val coll = ctx.args.meta.collective
     val orgs = store
-      .transact(ROrganization.findLike(ctx.args.meta.collective, kind, value))
+      .transact(
+        QEntityLookup.findByMatcher(coll, REntityType.Key.organization, matcher, value)
+      )
       .map(MetaProposalList.from(MetaProposalType.CorrOrg, nt))
-    val corrP = store
-      .transact(
-        RPerson
-          .findLike(ctx.args.meta.collective, kind, value, PersonUse.correspondentAndBoth)
-      )
-      .map(MetaProposalList.from(MetaProposalType.CorrPerson, nt))
-    val concP = store
-      .transact(
-        RPerson
-          .findLike(ctx.args.meta.collective, kind, value, PersonUse.concerningAndBoth)
-      )
+    val persons = store
+      .transact(QEntityLookup.findByMatcher(coll, REntityType.Key.person, matcher, value))
       .map(MetaProposalList.from(MetaProposalType.CorrPerson, nt))
 
-    ctx.logger.debug(s"Looking with $kind: $value") *>
-      List(orgs, corrP, concP).traverse(identity).map(MetaProposalList.flatten)
+    ctx.logger.debug(s"Looking with ${matcher.name}: $value") *>
+      List(orgs, persons).traverse(identity).map(MetaProposalList.flatten)
   }
 
   // The backslash *must* be stripped from search strings.

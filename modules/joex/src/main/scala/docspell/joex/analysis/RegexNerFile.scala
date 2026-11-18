@@ -14,10 +14,7 @@ import fs2.io.file.{Files, Path}
 import docspell.common._
 import docspell.common.util.File
 import docspell.store.Store
-import docspell.store.queries.QCollective
-import docspell.store.records.REquipment
-import docspell.store.records.ROrganization
-import docspell.store.records.RPerson
+import docspell.store.queries.QEntityLookup
 
 import io.circe.syntax._
 
@@ -142,7 +139,7 @@ object RegexNerFile {
         _ <- logger.info(
           s"Generating custom NER file for collective '${collective.value}'"
         )
-        names <- store.transact(QCollective.allNames(collective, cfg.maxEntries))
+        names <- store.transact(QEntityLookup.allNames(collective, cfg.maxEntries))
         nerFile = NerFile(collective, lastUpdate, now)
         _ <- update(nerFile, NerFile.mkNerConfig(names))
       } yield nerFile
@@ -151,24 +148,8 @@ object RegexNerFile {
 
   object Sql {
     import doobie._
-    import docspell.store.qb.DSL._
-    import docspell.store.qb._
 
-    def latestUpdate(collective: CollectiveId): ConnectionIO[Option[Timestamp]] = {
-      def max_(col: Column[_], cidCol: Column[CollectiveId]): Select =
-        Select(max(col).as("t"), from(col.table), cidCol === collective)
-
-      val sql = union(
-        max_(ROrganization.T.updated, ROrganization.T.cid),
-        max_(RPerson.T.updated, RPerson.T.cid),
-        max_(REquipment.T.updated, REquipment.T.cid)
-      )
-      val t = Column[Timestamp]("t", TableDef(""))
-
-      run(select(max(t)), from(sql, "x"))
-        .query[Option[Timestamp]]
-        .option
-        .map(_.flatten)
-    }
+    def latestUpdate(collective: CollectiveId): ConnectionIO[Option[Timestamp]] =
+      QEntityLookup.latestUpdate(collective)
   }
 }

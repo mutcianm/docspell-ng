@@ -6,6 +6,7 @@
 
 package docspell.joex.learn
 
+import cats.data.{NonEmptyList => Nel}
 import fs2.{Pipe, Stream}
 
 import docspell.analysis.classifier.TextClassifier.Data
@@ -13,6 +14,7 @@ import docspell.common._
 import docspell.store.Store
 import docspell.store.qb.Batch
 import docspell.store.queries.{QItem, TextAndTag}
+import docspell.store.records.{REntityRole, REntityType}
 
 import doobie._
 
@@ -34,61 +36,70 @@ object SelectItems {
     store.transact(connStream)
   }
 
+  private val correspondent = Nel.of(REntityRole.Key.sender, REntityRole.Key.recipient)
+  private val concerning = Nel.of(REntityRole.Key.concerning)
+
   def forCorrOrg[F[_]](
       store: Store[F],
       collective: CollectiveId,
       maxItems: Int,
       maxTextLen: Int
-  ): Stream[F, Data] = {
-    val connStream =
-      allItems(collective, maxItems)
-        .evalMap(item =>
-          QItem.resolveTextAndCorrOrg(collective, item, maxTextLen, pageSep)
-        )
-        .through(mkData)
-    store.transact(connStream)
-  }
+  ): Stream[F, Data] =
+    forLinkedEntity(store, collective, maxItems, maxTextLen)(
+      correspondent,
+      REntityType.Key.organization
+    )
 
   def forCorrPerson[F[_]](
       store: Store[F],
       collective: CollectiveId,
       maxItems: Int,
       maxTextLen: Int
-  ): Stream[F, Data] = {
-    val connStream =
-      allItems(collective, maxItems)
-        .evalMap(item =>
-          QItem.resolveTextAndCorrPerson(collective, item, maxTextLen, pageSep)
-        )
-        .through(mkData)
-    store.transact(connStream)
-  }
+  ): Stream[F, Data] =
+    forLinkedEntity(store, collective, maxItems, maxTextLen)(
+      correspondent,
+      REntityType.Key.person
+    )
 
   def forConcPerson[F[_]](
       store: Store[F],
       collective: CollectiveId,
       maxItems: Int,
       maxTextLen: Int
-  ): Stream[F, Data] = {
-    val connStream =
-      allItems(collective, maxItems)
-        .evalMap(item =>
-          QItem.resolveTextAndConcPerson(collective, item, maxTextLen, pageSep)
-        )
-        .through(mkData)
-    store.transact(connStream)
-  }
+  ): Stream[F, Data] =
+    forLinkedEntity(store, collective, maxItems, maxTextLen)(
+      concerning,
+      REntityType.Key.person
+    )
 
   def forConcEquip[F[_]](
       store: Store[F],
       collective: CollectiveId,
       maxItems: Int,
       maxTextLen: Int
-  ): Stream[F, Data] = {
+  ): Stream[F, Data] =
+    forLinkedEntity(store, collective, maxItems, maxTextLen)(
+      concerning,
+      REntityType.Key.equipment
+    )
+
+  private def forLinkedEntity[F[_]](
+      store: Store[F],
+      collective: CollectiveId,
+      maxItems: Int,
+      maxTextLen: Int
+  )(roleKeys: Nel[Ident], typeKey: Ident): Stream[F, Data] = {
     val connStream =
       allItems(collective, maxItems)
         .evalMap(item =>
-          QItem.resolveTextAndConcEquip(collective, item, maxTextLen, pageSep)
+          QItem.resolveTextAndLinkedEntity(
+            collective,
+            item,
+            roleKeys,
+            typeKey,
+            maxTextLen,
+            pageSep
+          )
         )
         .through(mkData)
     store.transact(connStream)

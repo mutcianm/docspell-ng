@@ -13,7 +13,8 @@ import cats.implicits._
 import docspell.common._
 import docspell.scheduler.{Context, Task}
 import docspell.store.Store
-import docspell.store.records.RItem
+import docspell.store.queries.QEntity
+import docspell.store.records.{REntityRole, RItem}
 
 object LinkProposal {
 
@@ -57,7 +58,7 @@ object LinkProposal {
           Result.noneFound(mpt).pure[F]
       case Some(a) if a.isSingleValue =>
         ctx.logger.info(s"Found one candidate for ${a.proposalType}") *>
-          setItemMeta(data.item.id, ctx, store, a.proposalType, a.values.head.ref.id).map(
+          setItemMeta(data.item, ctx, store, a.proposalType, a.values.head.ref.id).map(
             _ => Result.single(mpt)
           )
       case Some(a) =>
@@ -65,55 +66,33 @@ object LinkProposal {
         ctx.logger.info(
           s"Found many (${a.size}, $ids) candidates for ${a.proposalType}. Setting first."
         ) *>
-          setItemMeta(data.item.id, ctx, store, a.proposalType, a.values.head.ref.id).map(
+          setItemMeta(data.item, ctx, store, a.proposalType, a.values.head.ref.id).map(
             _ => Result.multiple(mpt)
           )
     }
 
   def setItemMeta[F[_]: Sync](
-      itemId: Ident,
+      item: RItem,
       ctx: Context[F, ProcessItemArgs],
       store: Store[F],
       mpt: MetaProposalType,
       value: Ident
-  ): F[Int] =
+  ): F[Int] = {
+    val itemId = item.id
+    val correspondent =
+      if (item.direction == Direction.Incoming) REntityRole.Key.sender
+      else REntityRole.Key.recipient
+    def link(roleKey: Ident): F[Int] =
+      ctx.logger.debug(s"Linking item to ${value.id} as ${roleKey.id} ($mpt)") *>
+        store.transact(
+          QEntity.replaceLinkOfType(itemId, ctx.args.meta.collective, roleKey, value)
+        )
+
     mpt match {
-      case MetaProposalType.CorrOrg =>
-        ctx.logger.debug(s"Updating item organization with: ${value.id}") *>
-          store.transact(
-            RItem.updateCorrOrg(
-              NonEmptyList.of(itemId),
-              ctx.args.meta.collective,
-              Some(value)
-            )
-          )
-      case MetaProposalType.ConcPerson =>
-        ctx.logger.debug(s"Updating item concerning person with: $value") *>
-          store.transact(
-            RItem.updateConcPerson(
-              NonEmptyList.of(itemId),
-              ctx.args.meta.collective,
-              Some(value)
-            )
-          )
-      case MetaProposalType.CorrPerson =>
-        ctx.logger.debug(s"Updating item correspondent person with: $value") *>
-          store.transact(
-            RItem.updateCorrPerson(
-              NonEmptyList.of(itemId),
-              ctx.args.meta.collective,
-              Some(value)
-            )
-          )
-      case MetaProposalType.ConcEquip =>
-        ctx.logger.debug(s"Updating item concerning equipment with: $value") *>
-          store.transact(
-            RItem.updateConcEquip(
-              NonEmptyList.of(itemId),
-              ctx.args.meta.collective,
-              Some(value)
-            )
-          )
+      case MetaProposalType.CorrOrg | MetaProposalType.CorrPerson =>
+        link(correspondent)
+      case MetaProposalType.ConcPerson | MetaProposalType.ConcEquip =>
+        link(REntityRole.Key.concerning)
       case MetaProposalType.DocDate =>
         MetaProposal.parseDate(value) match {
           case Some(ld) =>
@@ -147,6 +126,7 @@ object LinkProposal {
               0.pure[F]
         }
     }
+  }
 
   sealed trait Result {
     def proposalType: MetaProposalType
