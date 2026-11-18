@@ -6,7 +6,6 @@
 
 package docspell.backend.ops
 
-import cats.data.NonEmptyList
 import cats.effect.{Async, Resource}
 import cats.implicits._
 
@@ -48,7 +47,6 @@ trait OOrganization[F[_]] {
 }
 
 object OOrganization {
-  import docspell.store.qb.DSL._
 
   case class OrgAndContacts(org: ROrganization, contacts: Seq[RContact])
 
@@ -73,11 +71,6 @@ object OOrganization {
     def parseOrDefault(str: String): OrganizationOrder =
       parse(str).toOption.getOrElse(NameAsc)
 
-    private[ops] def apply(order: OrganizationOrder)(table: ROrganization.Table) =
-      order match {
-        case NameAsc  => NonEmptyList.of(table.name.asc)
-        case NameDesc => NonEmptyList.of(table.name.desc)
-      }
   }
 
   sealed trait PersonOrder
@@ -99,23 +92,6 @@ object OOrganization {
     def parseOrDefault(str: String): PersonOrder =
       parse(str).toOption.getOrElse(NameAsc)
 
-    private[ops] def apply(
-        order: PersonOrder
-    )(person: RPerson.Table, org: ROrganization.Table) =
-      order match {
-        case NameAsc  => NonEmptyList.of(person.name.asc)
-        case NameDesc => NonEmptyList.of(person.name.desc)
-        case OrgAsc   => NonEmptyList.of(org.name.asc)
-        case OrgDesc  => NonEmptyList.of(org.name.desc)
-      }
-
-    private[ops] def nameOnly(order: PersonOrder)(person: RPerson.Table) =
-      order match {
-        case NameAsc  => NonEmptyList.of(person.name.asc)
-        case NameDesc => NonEmptyList.of(person.name.desc)
-        case OrgAsc   => NonEmptyList.of(person.name.asc)
-        case OrgDesc  => NonEmptyList.of(person.name.asc)
-      }
   }
 
   private def byName[A](items: Vector[A], name: A => String, desc: Boolean): Vector[A] = {

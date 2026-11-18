@@ -6,7 +6,6 @@
 
 package docspell.backend.ops
 
-import cats.data.NonEmptyList
 import cats.effect.{Async, Resource}
 import cats.implicits._
 
@@ -28,7 +27,6 @@ trait OEquipment[F[_]] {
 }
 
 object OEquipment {
-  import docspell.store.qb.DSL._
 
   sealed trait EquipmentOrder
   object EquipmentOrder {
@@ -44,11 +42,6 @@ object OEquipment {
 
     def parseOrDefault(str: String): EquipmentOrder =
       parse(str).toOption.getOrElse(NameAsc)
-
-    private[ops] def apply(order: EquipmentOrder)(table: REquipment.Table) = order match {
-      case NameAsc  => NonEmptyList.of(table.name.asc)
-      case NameDesc => NonEmptyList.of(table.name.desc)
-    }
   }
 
   // entities are the source; these are read-only views in the former shape (#24)
