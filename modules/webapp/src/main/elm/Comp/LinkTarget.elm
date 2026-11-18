@@ -9,6 +9,7 @@ module Comp.LinkTarget exposing
     ( LinkTarget(..)
     , makeConcLink
     , makeCorrLink
+    , makeRoleLinks
     , makeCustomFieldLink
     , makeCustomFieldLink2
     , makeFolderLink
@@ -19,7 +20,9 @@ module Comp.LinkTarget exposing
 
 import Api.Model.IdName exposing (IdName)
 import Api.Model.ItemFieldValue exposing (ItemFieldValue)
+import Api.Model.ItemLink exposing (ItemLink)
 import Api.Model.Tag exposing (Tag)
+import Data.EntityRoles
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -31,6 +34,7 @@ type LinkTarget
     | LinkCorrPerson IdName
     | LinkConcPerson IdName
     | LinkConcEquip IdName
+    | LinkEntity String IdName
     | LinkFolder IdName
     | LinkTag IdName
     | LinkCustomField ItemFieldValue
@@ -70,6 +74,45 @@ makeConcLink item linkClasses tagger =
             makeLink linkClasses (LinkConcEquip >> tagger) idname
     in
     combine (Maybe.map makePerson item.concPerson) (Maybe.map makeEquip item.concEquipment)
+
+
+{-| One line per role with links, e.g. "From: Acme" or "Concerning: Jane, Van". The label
+function names each role; entities link to a search for that role and entity.
+-}
+makeRoleLinks :
+    (ItemLink -> String)
+    -> { a | links : List ItemLink }
+    -> List ( String, Bool )
+    -> (LinkTarget -> msg)
+    -> List ( String, List (Html msg) )
+makeRoleLinks roleLabel item linkClasses tagger =
+    let
+        roles =
+            List.foldl
+                (\l acc ->
+                    if List.member l.roleId acc then
+                        acc
+
+                    else
+                        acc ++ [ l.roleId ]
+                )
+                []
+                (List.sortBy (.roleName >> Data.EntityRoles.order) item.links)
+
+        line roleId =
+            let
+                links =
+                    List.filter (\l -> l.roleId == roleId) item.links
+
+                name =
+                    List.head links |> Maybe.map roleLabel |> Maybe.withDefault ""
+
+                linkOf l =
+                    makeLink linkClasses (LinkEntity roleId >> tagger) (IdName l.entityId l.entityName)
+            in
+            ( name, List.intersperse (text ", ") (List.map linkOf links) )
+    in
+    List.map line roles
 
 
 makeFolderLink :

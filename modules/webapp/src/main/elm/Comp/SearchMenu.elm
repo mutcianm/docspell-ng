@@ -39,6 +39,7 @@ import Api.Model.SearchStats exposing (SearchStats)
 import Comp.BookmarkChooser
 import Comp.CustomFieldMultiInput
 import Comp.DatePicker
+import Comp.RoleSearch
 import Comp.Dropdown exposing (isDropdownChangeMsg)
 import Comp.FolderSelect
 import Comp.LinkTarget exposing (LinkTarget)
@@ -85,6 +86,7 @@ type alias Model =
     , corrPersonModel : Comp.Dropdown.Model IdName
     , concPersonModel : Comp.Dropdown.Model IdName
     , concEquipmentModel : Comp.Dropdown.Model Equipment
+    , roleSearch : Comp.RoleSearch.Model
     , folderList : Comp.FolderSelect.Model
     , selectedFolder : Maybe FolderStats
     , inboxCheckbox : Bool
@@ -140,6 +142,7 @@ init flags =
     , corrPersonModel = Comp.Dropdown.makeSingle
     , concPersonModel = Comp.Dropdown.makeSingle
     , concEquipmentModel = Comp.Dropdown.makeSingle
+    , roleSearch = Comp.RoleSearch.empty
     , folderList = Comp.FolderSelect.init Nothing []
     , selectedFolder = Nothing
     , inboxCheckbox = False
@@ -305,6 +308,7 @@ getItemQuery selectedItems model =
             |> List.map .id
             |> List.head
             |> Maybe.map (Q.ConcEquipId Q.Eq)
+        , whenNotEmpty (Comp.RoleSearch.queries model.roleSearch) Q.And
         , whenNotEmpty (Data.CustomFieldChange.toFieldValues model.customValues)
             (List.map (Q.CustomFieldId Q.Like) >> Q.And)
         , Maybe.map (Q.DateMs Q.Gte) model.fromDate
@@ -349,6 +353,7 @@ resetModel model =
         , corrPersonModel = emptyDropdown model.corrPersonModel
         , concPersonModel = emptyDropdown model.concPersonModel
         , concEquipmentModel = emptyDropdown model.concEquipmentModel
+        , roleSearch = Comp.RoleSearch.reset model.roleSearch
         , folderList = emptyFolder model.folderList
         , selectedFolder = Nothing
         , inboxCheckbox = False
@@ -388,6 +393,8 @@ type Msg
     | CorrPersonMsg (Comp.Dropdown.Msg IdName)
     | ConcPersonMsg (Comp.Dropdown.Msg IdName)
     | ConcEquipmentMsg (Comp.Dropdown.Msg Equipment)
+    | RoleSearchMsg Comp.RoleSearch.Msg
+    | SetRoleEntity String String
     | FromDateMsg Comp.DatePicker.Msg
     | UntilDateMsg Comp.DatePicker.Msg
     | FromDueDateMsg Comp.DatePicker.Msg
@@ -459,6 +466,9 @@ linkTargetMsg linkTarget =
 
         Comp.LinkTarget.LinkConcEquip id ->
             Just <| SetConcEquip id
+
+        Comp.LinkTarget.LinkEntity roleId id ->
+            Just <| SetRoleEntity roleId id.id
 
         Comp.LinkTarget.LinkFolder id ->
             Just <| SetFolder id
@@ -557,6 +567,7 @@ updateDrop ddm flags settings msg model =
                     , Api.getEquipments flags "" Data.EquipmentOrder.NameAsc GetEquipResp
                     , Api.getPersons flags "" Data.PersonOrder.NameAsc GetPersonResp
                     , Cmd.map CustomFieldMsg (Comp.CustomFieldMultiInput.initCmd flags)
+                    , Cmd.map RoleSearchMsg (Tuple.second (Comp.RoleSearch.init flags model.roleSearch))
                     , cdp
                     , Api.getBookmarks flags AllBookmarksResp
                     ]
@@ -839,6 +850,32 @@ updateDrop ddm flags settings msg model =
             , cmd = Cmd.map DirectionMsg c2
             , sub = Sub.none
             , stateChange = isDropdownChangeMsg m
+            , dragDrop = DD.DragDropData ddm Nothing
+            , selectionChange = Data.ItemIds.noChange
+            }
+
+        RoleSearchMsg m ->
+            let
+                ( rm, rc ) =
+                    Comp.RoleSearch.update m model.roleSearch
+            in
+            { model = { model | roleSearch = rm }
+            , cmd = Cmd.map RoleSearchMsg rc
+            , sub = Sub.none
+            , stateChange = Comp.RoleSearch.isChangeMsg m
+            , dragDrop = DD.DragDropData ddm Nothing
+            , selectionChange = Data.ItemIds.noChange
+            }
+
+        SetRoleEntity roleId entityId ->
+            let
+                reset =
+                    resetModel model
+            in
+            { model = { reset | roleSearch = Comp.RoleSearch.select roleId entityId reset.roleSearch }
+            , cmd = Cmd.none
+            , sub = Sub.none
+            , stateChange = True
             , dragDrop = DD.DragDropData ddm Nothing
             , selectionChange = Data.ItemIds.noChange
             }
@@ -1489,8 +1526,11 @@ tabLook settings selectedItems model tab =
 
         TabCorrespondent ->
             hiddenOr [ Data.Fields.CorrOrg, Data.Fields.CorrPerson ] <|
-                activeWhenNotEmpty (Comp.Dropdown.getSelected model.orgModel)
-                    (Comp.Dropdown.getSelected model.corrPersonModel)
+                if Comp.RoleSearch.isEmpty model.roleSearch then
+                    Comp.Tabs.Normal
+
+                else
+                    Comp.Tabs.Active
 
         TabConcerning ->
             hiddenOr [ Data.Fields.ConcPerson, Data.Fields.ConcEquip ] <|
@@ -1683,66 +1723,12 @@ searchTabs texts ddd flags settings selectedItems model =
             ]
       }
     , { name = tabName TabCorrespondent
-      , title = texts.basics.correspondent
+      , title = texts.linkedEntities
       , titleRight = []
       , info = Nothing
       , body =
-            [ div
-                [ class "mb-4"
-                , classList [ ( "hidden", isHidden Data.Fields.CorrOrg ) ]
-                ]
-                [ label [ class S.inputLabel ]
-                    [ text texts.basics.organization ]
-                , Html.map OrgMsg
-                    (Comp.Dropdown.view2
-                        (Comp.Dropdown.orgFormViewSettings texts.chooseOrganization DS.sidebarStyle)
-                        settings
-                        model.orgModel
-                    )
-                ]
-            , div
-                [ class "mb-4"
-                , classList [ ( "hidden", isHidden Data.Fields.CorrPerson ) ]
-                ]
-                [ label [ class S.inputLabel ] [ text texts.basics.person ]
-                , Html.map CorrPersonMsg
-                    (Comp.Dropdown.view2
-                        personCfg
-                        settings
-                        model.corrPersonModel
-                    )
-                ]
-            ]
-      }
-    , { name = tabName TabConcerning
-      , title = texts.basics.concerning
-      , titleRight = []
-      , info = Nothing
-      , body =
-            [ div
-                [ class "mb-4"
-                , classList [ ( "hidden", isHidden Data.Fields.ConcPerson ) ]
-                ]
-                [ label [ class S.inputLabel ] [ text texts.basics.person ]
-                , Html.map ConcPersonMsg
-                    (Comp.Dropdown.view2
-                        personCfg
-                        settings
-                        model.concPersonModel
-                    )
-                ]
-            , div
-                [ class "mb-4"
-                , classList [ ( "hidden", isHidden Data.Fields.ConcEquip ) ]
-                ]
-                [ label [ class S.inputLabel ] [ text texts.basics.equipment ]
-                , Html.map ConcEquipmentMsg
-                    (Comp.Dropdown.view2
-                        concEquipCfg
-                        settings
-                        model.concEquipmentModel
-                    )
-                ]
+            [ Html.map RoleSearchMsg
+                (Comp.RoleSearch.view texts.chooseEntity settings model.roleSearch)
             ]
       }
     , { name = tabName TabCustomFields

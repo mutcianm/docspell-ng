@@ -40,6 +40,8 @@ type alias Texts =
     , nameSearchInfo : String
     , tagCategoryTab : String
     , chooseOrganization : String
+    , linkedEntities : String
+    , chooseEntity : String
     , createCustomFieldTitle : String
     , from : String
     , to : String
@@ -77,6 +79,8 @@ gb =
     , nameSearchInfo = "Looks in correspondents, concerned entities, item name and notes."
     , tagCategoryTab = "Tag Categories"
     , chooseOrganization = "Choose an organization"
+    , linkedEntities = "Linked entities"
+    , chooseEntity = "Choose…"
     , createCustomFieldTitle = "Create a new custom field"
     , from = "From"
     , to = "To"
@@ -114,6 +118,8 @@ de =
     , nameSearchInfo = "Sucht in Namen von Korrespondent/Betreffend, Dokumenten und Notizen."
     , tagCategoryTab = "Tag-Kategorien"
     , chooseOrganization = "Wähle eine Organisation"
+    , linkedEntities = "Verknüpfte Einträge"
+    , chooseEntity = "Auswählen…"
     , createCustomFieldTitle = "Neues Benutzerfeld erstellen"
     , from = "Von"
     , to = "Zu"
@@ -151,6 +157,8 @@ fr =
     , nameSearchInfo = "Regarde dans les correspondants, organisations, documents et notes."
     , tagCategoryTab = "Catégorie de tag"
     , chooseOrganization = "Choisir une organisation"
+    , linkedEntities = "Entrées liées"
+    , chooseEntity = "Choisir…"
     , createCustomFieldTitle = "Créer un nouveau champs personnalisé"
     , from = "De"
     , to = "À"
