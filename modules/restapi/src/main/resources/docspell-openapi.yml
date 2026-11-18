@@ -9951,6 +9951,8 @@ components:
         typeId:
           type: string
           format: ident
+        roleLabel:
+          type: string
 
     ItemsAndLinks:
       description: |

@@ -153,7 +153,7 @@ trait Conversions {
     )
 
   def mkItemLink(l: QEntity.ItemLink): ItemLink =
-    ItemLink(l.role.id, l.role.name, l.entity.id, l.entity.name, l.entity.typeId)
+    ItemLink(l.role.id, l.role.name, l.entity.id, l.entity.name, l.entity.typeId, l.role.label)
 
   def mkItemFieldValue(v: QItemFieldValue): ItemFieldValue =
     ItemFieldValue(v.fieldId, v.fieldName, v.fieldLabel, v.fieldType, v.value)
