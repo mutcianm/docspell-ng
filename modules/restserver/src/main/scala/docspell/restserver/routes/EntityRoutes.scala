@@ -16,7 +16,7 @@ import docspell.backend.ops.OEntities
 import docspell.common._
 import docspell.restapi.model._
 import docspell.restserver.http4s._
-import docspell.store.records.{RAttrDef, REntityType}
+import docspell.store.records.REntityType
 
 import org.http4s.HttpRoutes
 import org.http4s.circe.CirceEntityDecoder._
@@ -166,8 +166,17 @@ object EntityRoutes {
       in.attrs.map(a => a.attrId -> a.value)
     )
 
-  private def mkAttr(a: RAttrDef): AttrDef =
-    AttrDef(a.id, a.name, a.label, a.ftype, a.multi, a.matcher, a.created)
+  private def mkAttr(d: OEntities.AttrData): AttrDef =
+    AttrDef(
+      d.attr.id,
+      d.attr.name,
+      d.attr.label,
+      d.attr.ftype,
+      d.attr.multi,
+      d.attr.matcher,
+      d.usages,
+      d.attr.created
+    )
 
   private def mkType(t: OEntities.TypeData): EntityType = {
     val et: REntityType = t.entityType

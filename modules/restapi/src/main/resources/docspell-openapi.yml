@@ -9683,6 +9683,7 @@ components:
         - ftype
         - multi
         - matcher
+        - usages
         - created
       properties:
         id:
@@ -9712,6 +9713,11 @@ components:
             - alias
             - email
             - website
+        usages:
+          description: |
+            The number of values stored for this attribute.
+          type: integer
+          format: int32
         created:
           type: integer
           format: date-time

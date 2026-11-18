@@ -69,7 +69,8 @@ object OEntities {
   type EntityData = QEntity.EntityData
   type ItemLink = QEntity.ItemLink
 
-  case class TypeData(entityType: REntityType, attrs: Vector[RAttrDef])
+  case class AttrData(attr: RAttrDef, usages: Int)
+  case class TypeData(entityType: REntityType, attrs: Vector[AttrData])
   case class RoleData(role: REntityRole, targets: Vector[Ident])
 
   case class NewType(name: Ident, label: Option[String], recognize: Boolean)
@@ -142,7 +143,14 @@ object OEntities {
       def findTypes(coll: CollectiveId): F[Vector[TypeData]] =
         store.transact(for {
           types <- REntityType.findAll(coll)
-          data <- types.traverse(t => RAttrDef.findByType(t.id).map(TypeData(t, _)))
+          data <- types.traverse(t =>
+            RAttrDef
+              .findByType(t.id)
+              .flatMap(
+                _.traverse(a => REntityAttr.countByAttrDef(a.id).map(AttrData(a, _)))
+              )
+              .map(TypeData(t, _))
+          )
         } yield data)
 
       private def nameFree(
