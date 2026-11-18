@@ -50,13 +50,20 @@ To solve this problem, we need to make use of custom argument mappings. In the d
             # Default Mapping Below
               {
                 matches = ".*"
-                args = [ "-l", "{{lang}}" ]
+                args = [ "-l", "{{langs}}" ]
               }
             ]
           }
         }
 
 ```
+
+The default mapping passes `{{langs}}`, which is the document language
+plus the [extra OCR
+languages](@/docs/joex/file-processing.md#ocr-languages). The full
+default also has an `ocr_mode` mapping that turns the setting
+`ocrmypdf.mode` into ocrmypdf options (see [conversion of
+PDFs](@/docs/joex/file-processing.md#pdf)).
 
 OCRmyPDF is used anytime you upload a PDF document. Here we see (2) custom mappings. The mapping for `jpn_vert` includes options such as `--tesseract-pageesgmode=5`. Page segmentation mode 5 helps with reading vertical text and sets the expected page layout. The mapping for `jpn` and `jpn_vert` both have `--output-type` set to accept PDF rather than the default PDF/A. This is to help read files that may have special encoding schemes and reduce them to PDF so that they can be read with more compatibility.
 

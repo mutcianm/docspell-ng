@@ -57,6 +57,22 @@ You can change the modes using the small icon above the tag input
 field (on the right).
 
 
+### Linked entities
+
+The section *Linked entities* has one picker per
+[role](@/docs/webapp/entities.md), like *sender*, *recipient* and
+*concerning*. Like tags, each picker works in one of three modes:
+
+1. _Add_: the entities you pick are linked to the items under that
+   role (the default)
+2. _Replace_: the links of that role are replaced by the entities you
+   pick
+3. _Remove_: the entities you pick are unlinked from the items
+
+The screenshots show the form of upstream Docspell, which has
+*Correspondent* and *Concerning* fields instead of this section.
+
+
 ## Choose an Action: Delete
 
 When choosing the delete action, a confirmation dialog shows up. If

@@ -48,4 +48,4 @@ and finally you can download the files
   {{ imgnormal2(light="download-all-04.png", dark="download-all-04-dark.png", width="") }}
 </div>
 
-a ZIP-File will be created will all the selected documents, with a folder structure one folder per month and corresponden folder inside `YYYY-mm/correspondent`.
+a ZIP-File will be created will all the selected documents, with a folder structure one folder per month and corresponden folder inside `YYYY-mm/correspondent`. The correspondent is the first organization (or, if there is none, person) on the other side of the document: the sender of incoming and the recipient of outgoing items.

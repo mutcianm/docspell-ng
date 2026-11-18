@@ -30,6 +30,9 @@ template = "docs.html"
 - Organize files using tags, folders, [Custom
   Fields](@/docs/webapp/customfields.md) and other
   [metadata](@/docs/webapp/metadata.md)
+- Link persons, organizations and your own [entity
+  types](@/docs/webapp/entities.md) to items through roles like
+  sender, recipient and concerning
 - Text is analysed to find and attach meta data automatically
 - *Keywords* metadata from pdf files is extracted and matched against
   tags in the database

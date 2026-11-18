@@ -82,6 +82,26 @@ $ curl -XPOST -H "Docspell-Admin-Secret: test123" http://localhost:7880/api/v1/a
 To enable these endpoints, you must provide a secret in the
 [configuration](@/docs/configure/admin-endpoint.md).
 
+## Entities and Roles
+
+Persons, organizations and equipment are
+[entities](@/docs/webapp/entities.md) in this fork, which changes
+some routes compared to upstream Docspell:
+
+- Entity types and their attributes are at `/sec/entitytype` and
+  `/sec/entitytype/{id}/attr`, roles at `/sec/entityrole` and the
+  entities themselves at `/sec/entity`.
+- Links of an item are read and changed at `/sec/item/{id}/links` and
+  `/sec/item/{id}/links/{roleId}`; for several items at once, use
+  `/sec/items/links/{roleId}`.
+- Creating, changing and deleting organizations, persons and
+  equipment, and setting `corrOrg`, `corrPerson`, `concPerson` and
+  `concEquipment` on items (for one or several items) are removed.
+- The `GET` routes for organizations, persons, equipment and contacts
+  still work and return entities in the former shape. Items still
+  carry the four fields above, derived from their links, so existing
+  clients that only read them keep working.
+
 ## Live Api
 
 Besides the statically generated documentation at this site, the rest

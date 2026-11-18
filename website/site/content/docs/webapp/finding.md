@@ -24,11 +24,14 @@ queries](@/docs/query/_index.md).
 
 ## The *Names* option {#names}
 
-This searches in the item name, names of correspondent organization
-and person, and names of concering person and equipment. It uses a
-simple substring search. When searching with this option active, it
-simply submits the (maybe hidden) search menu. So if the menu has
-other fields filled out, they will affect the result, too.
+This searches in the item name and in the names of some linked
+entities: the first (by name) organization and person on the other
+side of the document (sender of incoming, recipient of outgoing
+items), the first person on the collective's own side and the first
+equipment under *concerning*. It uses a simple substring search.
+When searching with this option active, it simply submits the (maybe
+hidden) search menu. So if the menu has other fields filled out, they
+will affect the result, too.
 
 
 ## The *Contents* option {#contents-only}
@@ -101,13 +104,16 @@ It is possible to put items into a folder in this view via drag&drop.
 Simply drag an item card and drop it on a folder. If dropped on the
 *Folders* header, the item is moved outside the folder.
 
-## Correspondent
+## Linked entities
 
-Pick a correspondent to show only these items.
+This section has one picker per [role](@/docs/webapp/entities.md),
+like *sender*, *recipient* and *concerning*. Pick entities to show
+only items linked to them under that role. Several entities in one
+role match items linked to any of them; entities picked in different
+roles must all match.
 
-## Concerned
-
-Pick a concerned entity to show only these items.
+The screenshot shows the search menu of upstream Docspell, which has
+*Correspondent* and *Concerning* fields instead.
 
 ## Custom Fields
 

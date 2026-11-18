@@ -8,7 +8,8 @@ weight = 18
 Custom fields allow to attach user defined metadata to items. For
 example, you may want to track the amount of each receipt or the
 invoice number etc. You can define fields that can be associated to
-your items, much like organizations and person.
+your items, much like the attributes of
+[entities](@/docs/webapp/entities.md).
 
 Custom fields can be deactivated in the user settings.
 
@@ -20,7 +21,7 @@ menu. One entry at the left shows _Custom Fields_:
 {{ figure2(light="custom-fields-01.png", dark="custom-fields-01_dark.png") }}
 
 Fields are defined per collective. They can also be created in the
-item edit menu (just like creating organizations). The `#Usage`
+item edit menu. The `#Usage`
 columns show how many items have a value for this field.
 
 A field consists of a name, a format and optional a label:

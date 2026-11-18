@@ -185,8 +185,9 @@ the left can be used to further constrain the results. The search will
 be combined with the stored query, such that the results always remain
 within the original results of the share.
 
-The options in the dropdown menus for correspondent, concerning etc
-are taken from the results. So only the data that is shared by the
+The search menu of a share has no *Linked entities* section. The
+options in the other dropdown menus, like tags and folders, are
+taken from the results. So only the data that is shared by the
 search results will be available to select. Other data is not leaked.
 
 Clicking the search icon next to the search input, switches the input

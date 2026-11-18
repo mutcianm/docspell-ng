@@ -22,7 +22,7 @@ emerge from the document itself. The reason is that this is possible
 to automate. This makes it very simple to *add* documents, because
 there is no time spent to think about where to put it. And it is
 possible to apply different structures on top later, like show first
-all documents of a specific correspondent, then all with tag
+all documents of a specific sender, then all with tag
 'invoice', etc. If these properties are attached to all documents, it
 is really easy to find a document. It even can be combined with
 fulltext search for the, hopefully rare, desperate cases.
@@ -36,8 +36,8 @@ learn from existing data and can apply
 techniques to support this. This metadata must be maintained manually
 in the application. Docspell looks for candidates for:
 
-- Correspondents
-- Concerned person or things
+- Senders and recipients (persons and organizations)
+- Things a document is about (for example a car or an apartment)
 - A date and due date
 - Tags
 
@@ -101,11 +101,12 @@ An *item* is roughly your document, only that an item may span
 multiple files, which are called *attachments*. An item has *meta
 data* associated:
 
-- a *correspondent*: the other side of the communication. It can be
-  an organization or a person.
-- a *concerning person* or *equipment*: a person or thing that
-  this item is about. Maybe it is an insurance contract about your
-  car.
+- *linked entities*: persons, organizations and other entities
+  linked to the item through a *role*. The built-in roles are
+  *sender* and *recipient*, the parties of the document, and
+  *concerning*, for what the document is about – maybe it is an
+  insurance contract about your car. You can define your own [entity
+  types and roles](@/docs/webapp/entities.md).
 - *tag*: an item can be tagged with one or more tags (or labels). A
   tag can have a *category*. This is intended for grouping tags, for
   example a category `doctype` could be used to group tags like

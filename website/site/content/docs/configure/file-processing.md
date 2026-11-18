@@ -57,8 +57,8 @@ all NLP features, which makes memory consumption much lower, but comes
 with the compromise of less accurate results.
 
 The mode `regexonly` doesn't use pre-defined lanuage models, even if
-available. It checks your address book against a document to find
-metadata. That means, it is language independent. Also, when using
+available. It checks your address book (persons, organizations and
+equipment) against a document to find metadata. That means, it is language independent. Also, when using
 `full` or `basic` with lanugages where no pre-defined models exist, it
 will degrade to `regexonly` for these.
 

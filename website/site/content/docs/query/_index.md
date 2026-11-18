@@ -109,6 +109,14 @@ These fields support all operators, except `incoming` and `inbox`
 which expect boolean values and for those some operators don't make
 sense.
 
+The `corr.*` and `conc.*` fields are kept from upstream Docspell and
+read the item's [linked entities](#roles-and-entities): the
+correspondent is the first organization or person on the other side
+of the document (sender of incoming, recipient of outgoing items),
+the concerning person is the first person on the collective's own
+side (recipient of incoming, sender of outgoing items), and the
+equipment is the first equipment under `concerning`.
+
 Fields that map to more than one value:
 
 - `tag` the tag name

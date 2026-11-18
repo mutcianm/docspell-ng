@@ -181,9 +181,30 @@ is enabled but fails, the error is not fatal and the processing will
 continue using the original pdf for extracting text. You can also
 disable it to remove the errors from the processing logs.
 
-The `--skip-text` option is necessary to not fail on "text" pdfs
-(where ocr is not necessary). In this case, the pdf will be converted
-to PDF/A.
+The setting `mode` decides what ocrmypdf does with pages that already
+have text:
+
+- `skip-text` (the default) keeps these pages as they are and only
+  converts the file to PDF/A. This is necessary to not fail on "text"
+  pdfs (where ocr is not necessary).
+- `redo-ocr` replaces an old invisible OCR text layer, for example
+  from OCR done in the wrong language, but keeps real (born-digital)
+  text. Pages are not deskewed in this mode.
+- `force-ocr` rasterizes every page and runs OCR on it; all existing
+  text is replaced.
+
+```conf
+docspell.joex.convert {
+  ocrmypdf {
+    enabled = true
+    mode = "skip-text"
+  }
+}
+```
+
+The mode is passed to ocrmypdf via the `{{ocr_mode}}` argument
+mapping of its command, see the [custom
+mappings](@/docs/configure/custom-mapping.md).
 
 
 ## Text Extraction
@@ -246,6 +267,30 @@ After OCR both texts are compared and the longer is used. Since PDFs
 can contain text and images, it might be safer to always do OCR, but
 this is something to choose by the user.
 
+A text layer may be long enough but still unusable: broken font
+encodings yield mostly symbols, and old OCR done in the wrong language
+yields letters of the wrong script. Two settings detect this and run
+OCR instead:
+
+```conf
+docspell.joex {
+  extraction {
+    pdf {
+      max-garbage-ratio = 1.0
+      min-script-ratio = 0.0
+    }
+  }
+}
+```
+
+The text is replaced by OCR when the share of garbage characters
+(symbols, private-use or unassigned characters) is above
+`max-garbage-ratio`, or when the share of letters in the script of
+the document language (for example Cyrillic for Russian) is below
+`min-script-ratio`. The defaults disable both checks. Clean text
+typically has a garbage ratio below 0.03; `0.1` for both is a
+reasonable start.
+
 PDF ocr is comprised of multiple steps. At first only the first
 `page-range` pages are extracted to avoid too long running tasks
 (someone submit an ebook for example). But you can disable this limit
@@ -297,7 +342,7 @@ docspell.joex {
           args = ["{{file}}"
                  , "stdout"
                  , "-l"
-                 , "{{lang}}"
+                 , "{{langs}}"
                  ]
           timeout = "5 minutes"
         }
@@ -306,6 +351,34 @@ docspell.joex {
   }
 }
 ```
+
+### OCR Languages
+
+OCR uses the document language by default. Multilingual documents are
+recognized much better when tesseract knows all languages that may
+occur. Additional languages can be given in tesseract's syntax
+(languages separated by `+`):
+
+```conf
+docspell.joex {
+  ocr-extra-languages = "eng+rus"
+}
+```
+
+These languages are appended to the document language and passed to
+tesseract and ocrmypdf via the `{{langs}}` variable of their commands,
+while `{{lang}}` stays the document language only. The tesseract
+language packs for these languages must be installed.
+
+The joex docker image of this fork replaces the distribution's
+tesseract models with the more accurate
+[`tessdata_best`](https://github.com/tesseract-ocr/tessdata_best)
+models for the languages given in the build argument
+`TESSDATA_BEST_LANGS` (default: `eng osd`). Each model makes the
+image about 10–15 MB larger, and OCR with them takes about twice as
+long. All other languages use the models installed with the
+distribution.
+
 
 # Generating Previews
 
@@ -365,10 +438,10 @@ features if running on low-end machines.
 If you enabled classification in the config file, a model is trained
 periodically from a collective's files. Very roughly speaking… this
 model contains the essence of "patterns" in the text that are likeley
-related to a tag, a corrpesondent etc.
+related to a tag, a sender etc.
 
 When a new document arrives, this model is used to ask for what
-metadata (tag, correspondent, etc) it thinks is likely to apply here.
+metadata (tag, sender, etc) it thinks is likely to apply here.
 
 Training the model is a rather resource intensive process. How much
 memory is needed, depends on the number of documents to learn from and
@@ -393,9 +466,19 @@ The admin can also limit the number of documents to train with in the
 config file to control the memory footprint when training.
 
 Classification is used in Docspell once for guessing tags and also for
-finding correspondent and concerned entities. For correspondent and
-concerned entities, the NLP approach is used first and the classifier
-results then fill missing values.
+finding the persons, organizations and equipment linked to an item.
+For these, the NLP approach is used first and the classifier results
+then fill missing values.
+
+Docspell proposes an organization or person as the other party of the
+document: *sender* for incoming and *recipient* for outgoing items. A
+person found as "concerning person" is proposed for the collective's
+own side (*recipient* for incoming, *sender* for outgoing items), and
+equipment under *concerning*. Entities whose *Suggest* flag is off
+are not proposed. Currently, only entities of the types person,
+organization and equipment are recognized; the *Recognize in
+documents* flag of [entity types](@/docs/webapp/entities.md) and the
+*Learn* flag of added roles have no effect yet.
 
 
 ## Natural Language Processing
@@ -412,9 +495,16 @@ exist for German, English, French and Spanish currently.
 Then [Stanford NLP](https://nlp.stanford.edu/software/) also allows to
 run custom rules against a text. This can be used as a fallback for
 terms where the statistical model didn't succeed. But it can also be
-used by itself. Docspell derives these rules from your address book,
-so it can find terms in the document text that match your organization
-and person names. This does not depend on the document language.
+used by itself. Docspell derives these rules from your address book
+(the names of your persons, organizations and equipment), so it can
+find terms in the document text that match them. This does not depend
+on the document language.
+
+Terms found either way are looked up by entity name and by attribute
+values marked as *alias*. E-mail addresses and websites in the text
+are compared with the attribute values of persons and organizations
+marked as *e-mail* and *website* (see [entity
+types](@/docs/webapp/entities.md#attributes)).
 
 By default, Docspell does both: it first uses the statistical language
 model (if available for the given language) and then runs the

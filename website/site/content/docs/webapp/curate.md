@@ -36,6 +36,14 @@ immediatly.
 {{ figure2(light="docspell-curate-3.png", dark="docspell-curate-3_dark.png") }}
 
 
+Persons, organizations and other entities are in the section *Linked
+entities*, with one picker per role (like *sender*, *recipient* and
+*concerning*). The suggestions for a role are shown below its picker.
+Roles without links or suggestions are hidden; use *Add role* to show
+one. See [Entities and Roles](@/docs/webapp/entities.md) for details.
+The screenshots show the form of upstream Docspell, which has
+*Correspondent* and *Concerning* sections instead.
+
 When you change something in the form, it is immediatly applied.
 
 It is also possible to change tags and folders in the list view via

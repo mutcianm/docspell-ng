@@ -25,6 +25,12 @@ probably fixed by adjusting some api calls. Pull requests are very
 welcome! See [this
 issue](https://github.com/eikek/docspell/issues/1241).
 
+In this fork, the script's calls for creating organizations and
+setting the correspondent of an item no longer exist. Correspondents
+are created with `/sec/entity` and linked with
+`/sec/item/{id}/links/{roleId}` instead (see [Entities and
+Roles](@/docs/webapp/entities.md)).
+
 {% end %}
 
 ## Usage

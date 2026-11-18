@@ -52,13 +52,18 @@ attachments in the item.
 # How it works
 
 Since the metadata of all items are merged into one, the order matters
-for fields that allow only one value (for example correspondents,
-concerning person/equipment, folder and dates). For these fields, the
+for fields that allow only one value (for example folder and dates).
+For these fields, the
 value of the first item in the list is used. The exception is the item
 notes: they are all concatenated with some newlines in between.
 
 All properties that allow multiple values (like tags and the
-attachments, of course) are simply moved to the target item. Custom
+attachments, of course) are simply moved to the target item. The
+[linked entities](@/docs/webapp/entities.md) of all items are added
+to the target item as well; a link that the target already has is not
+duplicated. A role that takes a single entity keeps the target's
+entity, or takes the first one from the other items if the target has
+none. Custom
 fields are merged depending on their type. Fields of type money and
 numeric are added together such that the final item contains the sum
 of all values. Text fields are concatenated using a comma as

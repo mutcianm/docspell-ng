@@ -55,11 +55,13 @@ subtitle of each card. Variables expressions are enclosed in `{{` and
 - `{{name}}` the item name
 - `{{source}}` the source the item was created from
 - `{{folder}}` the items folder
-- `{{corrOrg}}` the correspondent organization
-- `{{corrPerson}}` the correspondent person
+- `{{corrOrg}}` the first organization on the other side of the
+  document (sender of incoming, recipient of outgoing items)
+- `{{corrPerson}}` the first person on the other side of the document
 - `{{correspondent}}` organization and person separated by a comma
-- `{{concPerson}}` the concerning person
-- `{{concEquip}}` the concerning equipment
+- `{{concPerson}}` the first person on the collective's own side
+  (recipient of incoming, sender of outgoing items)
+- `{{concEquip}}` the first equipment linked under *concerning*
 - `{{concerning}}` person and equipment separated by a comma
 - `{{fileCount}}` the number of attachments of this item
 - `{{dateLong}}` the item date as full formatted date (_Tue, December 12nd, 2020_)
@@ -67,6 +69,11 @@ subtitle of each card. Variables expressions are enclosed in `{{` and
 - `{{dueDateLong}}` the item due date as full formatted date (_Tue, December 12nd, 2020_)
 - `{{dueDateShort}}` the item due date as short formatted date (_yyyy/mm/dd_)
 - `{{direction}}` the items direction values as string
+
+The variables for organization, person and equipment are derived from
+the item's [linked entities](@/docs/webapp/entities.md); "first"
+means first by name. There are no variables for other roles or entity
+types.
 
 You can combine multiple variables with `|` to use the first non-empty
 one, for example `{{corrOrg|corrPerson|-}}` would render the

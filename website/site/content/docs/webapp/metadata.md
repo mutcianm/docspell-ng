@@ -11,12 +11,11 @@ Docspell processes each uploaded file. Processing involves extracting
 archives, extracting text, anlyzing the extracted text and converting
 the file into a pdf. Text is analyzed to find metadata that can be set
 automatically. Docspell compares the extracted text against a set of
-known meta data. The *Meta Data* page allows to manage this meta data:
+known meta data. The *Manage Data* page allows to manage this meta data:
 
 - Tags
-- Organizations
-- Persons
-- Equipments
+- Entities (persons, organizations, equipment and your own types)
+- Types & Roles
 - Folders
 - Custom Fields
 
@@ -56,45 +55,29 @@ applies to PDF files). These keywords are then matched against the
 tags in the database. If they match, the item is tagged with them.
 
 
-## Organization and Person
+## Entities and Roles
 
-The organization entity represents an non-personal (organization or
-company) correspondent of an item. Docspell will choose one or more
-organizations when processing documents and associate the "best" match
-with your item.
+Persons, organizations, equipment and anything else your documents
+refer to are *entities*. Each entity belongs to an *entity type*:
+*person* and *organization* are built in, *equipment* is a regular
+type, and you can define your own types (like *vehicle* or
+*apartment*) with their own attributes.
 
-The person entitiy can appear in two roles: It may be a correspondent
-or the person an item is about. So a person is either a correspondent
-or a concerning person. Docspell can not know which person is which,
-therefore you need to tell this by checking the box "Use for
-concerning person suggestion only". If this is checked, docspell will
-use this person only to suggest a concerning person. Otherwise the
-person is used only for correspondent suggestions.
+Items link entities through *roles*. The built-in roles are *sender*
+and *recipient* for the parties of a document, and *concerning* for
+what the document is about, for example a car or an apartment. You
+can add more roles.
 
-Document processing uses the following properties:
+Docspell looks for persons, organizations and equipment when
+processing documents and links the "best" match to your item. It uses
+the entity names and the attribute values marked for matching:
+aliases, e-mail addresses and websites. All other attributes are not
+used during document processing. They might be useful when using this
+as a real address book. Entities whose *Suggest* flag is off are not
+proposed.
 
-- name
-- websites
-- e-mails
-
-The website and e-mails can be added as contact information. If these
-three are present, you should get good matches from docspell. All
-other fields of an organization and person are not used during
-document processing. They might be useful when using this as a real
-address book.
-
-
-## Equipment
-
-The equipment entity is almost like a tag. In fact, it could be
-replaced by a tag with a specific known category. The difference is
-that docspell will try to find a match and associate it with your
-item. The equipment represents non-personal things that an item is
-about. Examples are: bills or insurances for *cars*, contracts for
-*houses* or *flats*.
-
-Equipments don't have contact information, so the only property that
-is used to find matches during document processing is its name.
+See [Entities and Roles](@/docs/webapp/entities.md) for how to define
+types, attributes and roles and how to manage entities.
 
 
 ## Folders
@@ -151,7 +134,8 @@ available for some languages – namely German, English, French and
 Spanish. The reason is that the required statistical models are not
 available for other languages. However, docspell can still run other
 algorithms for the other languages, like classification and custom
-rules based on the address book.
+rules based on the address book (your persons, organizations and
+equipment).
 
 More information about file processing and text analysis can be found
 [here](@/docs/joex/file-processing.md#text-analysis).

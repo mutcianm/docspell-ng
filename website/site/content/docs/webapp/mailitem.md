@@ -28,7 +28,7 @@ form:
 
 Then write the mail. Multiple recipients may be specified. The input
 field shows completion proposals from all contacts in your address
-book (from organizations and persons). Choose an address by pressing
+book (the *email* attribute of organizations and persons). Choose an address by pressing
 *Enter* or by clicking a proposal from the list. The proposal list can
 be iterated by the *Up* and *Down* arrows. You can type in any
 address, of course, it doesn't need to match a proposal. If you type
