@@ -390,6 +390,50 @@ f.id:J2ES1Z4Ni9W-xw1VdFbt3KA-rL725kuyVzh-7La95Yw7Ax2:15.00
 ```
 
 
+# Roles and Entities
+
+Items are linked to entities (persons, organizations or entity types
+you define) under a role, such as `sender`, `recipient` or
+`concerning`. A role's name is used as the field:
+
+```
+<role><operator><value>
+```
+
+This compares the names of the entities linked under that role. For
+example, to find all items sent by an organization starting with
+"acme":
+
+```
+sender:acme*
+```
+
+The role name is not case-sensitive. To select entities by id, append
+`.id`, which also supports the in-operator:
+
+```
+sender.id~=J2ES1Z4Ni9W-xw1VdFbt3KA-rL725kuyVzh-7La95Yw7Ax2,dQL6Wh7jBgz-wLwqXuP3KL3-2Zrb8VjwGZz-DRxpSvLCm9Y
+```
+
+Attributes of entities are referenced with the type name and the
+attribute name. This selects all items linked, under any role, to an
+entity of that type with a matching attribute value:
+
+```
+<type>.<attribute><operator><value>
+```
+
+For example, all items linked to an organization with an e-mail address
+at `acme.test`:
+
+```
+organization.email:*@acme.test
+```
+
+Roles and types cannot be named after a field of the query language
+(like `name` or `tag`), and their names cannot contain dots.
+
+
 # Fulltext Search
 
 The special field `content` allows to add a fulltext search. Using
