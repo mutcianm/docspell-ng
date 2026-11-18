@@ -114,12 +114,10 @@ attached to the items being created.
 
 Every item in docspell has a direction value (incoming or outgoing).
 If you know that all mails you want to import have a specific
-directon, then you can set it here. Otherwise, *automatic* means that
-docspell chooses a direction based on the `From` header of a mail. If
-the `From` header is an e-mail address that belongs to a “concerning”
-person in your address book, then it is set to "outgoing". Otherwise
-it is set to "incoming". To support this, you need to add your own
-e-mail address(es) to your address book.
+directon, then you can set it here. Otherwise, *automatic* sets it to
+"incoming". To import sent mails as outgoing, create a separate task
+for the folder with your sent mails and set its direction to
+"outgoing".
 
 The *Item Folder* setting is used to put all items that are created
 from mails into the specified [folder](metadata#folders). If you

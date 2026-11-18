@@ -8,7 +8,6 @@ package docspell.joex.scanmailbox
 
 import cats.data.Kleisli
 import cats.data.NonEmptyList
-import cats.data.OptionT
 import cats.effect._
 import cats.implicits._
 import fs2._
@@ -19,7 +18,6 @@ import docspell.joex.Config
 import docspell.logging.Logger
 import docspell.scheduler.{Context, Task}
 import docspell.store.Store
-import docspell.store.queries.QOrganization
 import docspell.store.records._
 
 import _root_.io.circe.syntax._
@@ -257,31 +255,9 @@ object ScanMailboxTask {
           headers.pure[F]
       }
 
-    def getDirection(mh: MailHeader): F[Direction] = {
-      val out: OptionT[F, Direction] =
-        for {
-          from <- OptionT.fromOption[F](mh.from)
-          _ <- OptionT(
-            store.transact(
-              QOrganization
-                .findPersonByContact(
-                  ctx.args.account.collectiveId,
-                  from.address,
-                  Some(ContactKind.Email),
-                  Some(NonEmptyList.of(PersonUse.concerning))
-                )
-                .take(1)
-                .compile
-                .last
-            )
-          )
-        } yield Direction.Outgoing
-
-      OptionT
-        .fromOption[F](ctx.args.direction)
-        .orElse(out)
-        .getOrElse(Direction.Incoming)
-    }
+    // entities carry no "this is me" marker, so the task setting decides (#26)
+    def getDirection: Direction =
+      ctx.args.direction.getOrElse(Direction.Incoming)
 
     def postHandle[C](a: Access[F, C])(mh: MailHeaderItem): MailOp[F, C, Unit] = {
       val postHandleAll = ctx.args.postHandleAll.exists(identity)
@@ -317,9 +293,8 @@ object ScanMailboxTask {
       )
       for {
         _ <- ctx.logger.debug(s"Submitting mail '${mail.header.subject}'")
-        dir <- getDirection(mail.header)
         meta = OUpload.UploadMeta(
-          Some(dir),
+          Some(getDirection),
           s"mailbox-${ctx.args.account.login.id}",
           args.itemFolder,
           Seq.empty,
