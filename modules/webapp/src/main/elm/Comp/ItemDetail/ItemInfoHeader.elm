@@ -25,6 +25,7 @@ import Html.Attributes exposing (..)
 import Messages.Comp.ItemDetail.ItemInfoHeader exposing (Texts)
 import Page exposing (Page(..))
 import Styles as S
+import Util.Item
 
 
 view : Texts -> UiSettings -> Model -> Html Msg -> Html Msg
@@ -67,33 +68,21 @@ view texts settings model beforeTags =
             , Data.UiSettings.fieldVisible settings Data.Fields.DueDate
             )
 
-        corr =
-            ( div
-                [ class itemStyle
-                , title texts.basics.correspondent
-                ]
-                (Icons.correspondentIcon2 "mr-2"
-                    :: Comp.LinkTarget.makeCorrLink model.item
-                        [ ( linkStyle, True ) ]
-                        SetLinkTarget
-                )
-            , Data.UiSettings.fieldVisible settings Data.Fields.CorrOrg
-                || Data.UiSettings.fieldVisible settings Data.Fields.CorrPerson
-            )
-
-        conc =
-            ( div
-                [ class itemStyle
-                , title texts.basics.concerning
-                ]
-                (Icons.concernedIcon2 "mr-2"
-                    :: Comp.LinkTarget.makeConcLink model.item
-                        [ ( linkStyle, True ) ]
-                        SetLinkTarget
-                )
-            , Data.UiSettings.fieldVisible settings Data.Fields.ConcEquip
-                || Data.UiSettings.fieldVisible settings Data.Fields.ConcPerson
-            )
+        roleLinks =
+            Comp.LinkTarget.makeRoleLinks (Util.Item.roleLabel texts.basics)
+                model.item
+                [ ( linkStyle, True ) ]
+                SetLinkTarget
+                |> List.map
+                    (\( name, links ) ->
+                        ( div [ class itemStyle, title name ]
+                            (span [ class "opacity-75 mr-1" ] [ text (name ++ ":") ] :: links)
+                        , Data.UiSettings.fieldVisible settings Data.Fields.CorrOrg
+                            || Data.UiSettings.fieldVisible settings Data.Fields.CorrPerson
+                            || Data.UiSettings.fieldVisible settings Data.Fields.ConcEquip
+                            || Data.UiSettings.fieldVisible settings Data.Fields.ConcPerson
+                        )
+                    )
 
         itemfolder =
             ( div
@@ -176,12 +165,7 @@ view texts settings model beforeTags =
             ]
         , div [ class "flex flex-col sm:flex-row flex-wrap text-base order-2" ]
             (List.filter Tuple.second
-                [ date
-                , corr
-                , conc
-                , itemfolder
-                , src
-                ]
+                (date :: roleLinks ++ [ itemfolder, src ])
                 |> List.map Tuple.first
             )
         , div [ class "flex flex-col sm:flex-row flex-wrap text-base order-3" ]

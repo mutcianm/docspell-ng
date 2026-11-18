@@ -40,6 +40,7 @@ import Util.ItemDragDrop as DD
 import Util.List
 import Util.Maybe
 import Util.String
+import Util.Item
 
 
 type alias Model =
@@ -383,30 +384,7 @@ viewRow texts cfg settings flags model item =
                         , IT.render subtitleTemplate (templateCtx texts) item |> text
                         ]
                     , div [ class "space-y-1 mb-3" ]
-                        [ div
-                            [ classList
-                                [ ( "hidden"
-                                  , fieldHidden Data.Fields.CorrOrg
-                                        && fieldHidden Data.Fields.CorrPerson
-                                  )
-                                ]
-                            , title texts.basics.correspondent
-                            ]
-                            (Icons.correspondentIcon2 "mr-2 w-4 text-center"
-                                :: Comp.LinkTarget.makeCorrLink item [ ( "hover:opacity-75", True ) ] SetLinkTarget
-                            )
-                        , div
-                            [ classList
-                                [ ( "hidden"
-                                  , fieldHidden Data.Fields.ConcPerson
-                                        && fieldHidden Data.Fields.ConcEquip
-                                  )
-                                ]
-                            , title texts.basics.concerning
-                            ]
-                            (Icons.concernedIcon2 "mr-2 w-4 text-center"
-                                :: Comp.LinkTarget.makeConcLink item [ ( "hover:opacity-75", True ) ] SetLinkTarget
-                            )
+                        [ viewRoleLinks texts settings item
                         , div
                             [ classList
                                 [ ( "hidden", fieldHidden Data.Fields.Folder )
@@ -657,30 +635,7 @@ mainContent2 texts _ cardColor isCreated isDeleted settings _ item =
     in
     div
         [ class "flex flex-col px-2 py-2 mb-auto" ]
-        [ div
-            [ classList
-                [ ( "hidden"
-                  , fieldHidden Data.Fields.CorrOrg
-                        && fieldHidden Data.Fields.CorrPerson
-                  )
-                ]
-            , title texts.basics.correspondent
-            ]
-            (Icons.correspondentIcon2 "mr-2 w-4 text-center"
-                :: Comp.LinkTarget.makeCorrLink item [ ( "hover:opacity-75", True ) ] SetLinkTarget
-            )
-        , div
-            [ classList
-                [ ( "hidden"
-                  , fieldHidden Data.Fields.ConcPerson
-                        && fieldHidden Data.Fields.ConcEquip
-                  )
-                ]
-            , title texts.basics.concerning
-            ]
-            (Icons.concernedIcon2 "mr-2 w-4 text-center"
-                :: Comp.LinkTarget.makeConcLink item [ ( "hover:opacity-75", True ) ] SetLinkTarget
-            )
+        [ viewRoleLinks texts settings item
         , div
             [ class "font-bold py-1 text-lg"
             , classList [ ( "hidden", IT.render titlePattern (templateCtx texts) item == "" ) ]
@@ -1003,3 +958,28 @@ isMultiSelectMode cfg =
 
         Data.ItemSelection.Inactive ->
             False
+
+
+viewRoleLinks : Texts -> UiSettings -> ItemLight -> Html Msg
+viewRoleLinks texts settings item =
+    let
+        fieldHidden f =
+            Data.UiSettings.fieldHidden settings f
+
+        hidden =
+            fieldHidden Data.Fields.CorrOrg
+                && fieldHidden Data.Fields.CorrPerson
+                && fieldHidden Data.Fields.ConcPerson
+                && fieldHidden Data.Fields.ConcEquip
+    in
+    div [ classList [ ( "hidden", hidden ) ], class "space-y-1" ]
+        (Comp.LinkTarget.makeRoleLinks (Util.Item.roleLabel texts.basics)
+            item
+            [ ( "hover:opacity-75", True ) ]
+            SetLinkTarget
+            |> List.map
+                (\( name, links ) ->
+                    div [ title name ]
+                        (span [ class "opacity-75 mr-1" ] [ text (name ++ ":") ] :: links)
+                )
+        )
