@@ -509,8 +509,10 @@ object OEntities {
       def deleteEntity(coll: CollectiveId, id: Ident): F[Result] =
         run(for {
           _ <- found(REntity.findById(id, coll))
+          items <- lift(RItemEntity.findByEntity(id).map(_.map(_.itemId).distinct))
           _ <- lift(REntityAttr.deleteByEntity(id))
           _ <- lift(RItemEntity.deleteByEntity(id))
+          _ <- lift(items.traverse_(QEntity.refreshItemColumns(_, coll)))
           _ <- lift(REntity.deleteById(id, coll))
         } yield id)
 
@@ -589,6 +591,7 @@ object OEntities {
           _ <- lift(
             DML.update(RItem.T, RItem.T.id === item, DML.set(RItem.T.updated.setTo(now)))
           )
+          _ <- lift(QEntity.refreshItemColumns(item, coll))
         } yield ()
     })
 }

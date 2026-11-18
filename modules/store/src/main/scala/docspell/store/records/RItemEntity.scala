@@ -40,6 +40,9 @@ object RItemEntity {
   def findByItem(itemId: Ident): ConnectionIO[Vector[RItemEntity]] =
     run(select(T.all), from(T), T.itemId === itemId).query[RItemEntity].to[Vector]
 
+  def findByEntity(entityId: Ident): ConnectionIO[Vector[RItemEntity]] =
+    run(select(T.all), from(T), T.entityId === entityId).query[RItemEntity].to[Vector]
+
   def findByRole(roleId: Ident): ConnectionIO[Vector[RItemEntity]] =
     run(select(T.all), from(T), T.roleId === roleId).query[RItemEntity].to[Vector]
 

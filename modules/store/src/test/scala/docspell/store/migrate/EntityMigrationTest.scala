@@ -16,6 +16,7 @@ import cats.implicits._
 import docspell.common._
 import docspell.store.qb.DML
 import docspell.store.qb.DSL._
+import docspell.store.queries.QEntity
 import docspell.store.records._
 import docspell.store.{DatabaseTest, JdbcConfig, SchemaMigrateConfig, StoreFixture}
 
@@ -57,6 +58,7 @@ class EntityMigrationTest extends DatabaseTest {
         _ <- migrate.run
         _ <- assertions(cid).transact(xa)
         _ <- builtinsMatch(cid).transact(xa)
+        _ <- derivedColumns(cid).transact(xa)
       } yield ()
     }
   }
@@ -245,4 +247,37 @@ class EntityMigrationTest extends DatabaseTest {
       a <- shape(migrated)
       b <- shape(fresh)
     } yield assertEquals(b, a)
+
+  // the item columns point at entities (V1.41.0) and follow the links
+  private def derivedColumns(cid: CollectiveId): ConnectionIO[Unit] =
+    for {
+      org <- REntityType.findByKey(REntityType.Key.organization, cid).map(_.get)
+      _ <- REntity.insert(REntity(id("o2"), cid, org.id, "Newco", None, true, ts, ts))
+      _ <- QEntity.setLinkOfType(
+        id("i2"),
+        cid,
+        REntityRole.Key.recipient,
+        org.key.get,
+        Some(id("o2"))
+      )
+      outgoing <- RItem.findById(id("i2")).map(_.get)
+      _ <- RItem.updateDirection(
+        cats.data.NonEmptyList.of(id("i2")),
+        cid,
+        Direction.Incoming
+      )
+      _ <- QEntity.refreshItemColumns(id("i2"), cid)
+      incoming <- RItem.findById(id("i2")).map(_.get)
+      i1 <- RItem.findById(id("i1")).map(_.get)
+    } yield {
+      assertEquals(
+        (outgoing.corrOrg, outgoing.corrPerson),
+        (Some(id("o2")), Some(id("p1")))
+      )
+      assertEquals((incoming.corrOrg, incoming.corrPerson), (None, None))
+      assertEquals(
+        (i1.corrOrg, i1.concPerson, i1.concEquipment),
+        (Some(id("o1")), Some(id("p1")), Some(id("e1")))
+      )
+    }
 }
