@@ -52,6 +52,7 @@ type ItemQuery
     | CorrPersId AttrMatch String
     | ConcPersId AttrMatch String
     | ConcEquipId AttrMatch String
+    | RoleIds String (List String)
     | CustomField AttrMatch CustomFieldValue
     | CustomFieldId AttrMatch CustomFieldValue
     | DateMs AttrMatch Int
@@ -188,6 +189,9 @@ render q =
 
         ConcEquipId m id ->
             "conc.equip.id" ++ attrMatch m ++ quoteStr id
+
+        RoleIds role ids ->
+            role ++ ".id~=" ++ String.join "," (List.map quoteStr ids)
 
         CustomField m kv ->
             "f:" ++ kv.field ++ attrMatch m ++ quoteStr kv.value

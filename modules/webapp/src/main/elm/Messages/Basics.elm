@@ -43,6 +43,8 @@ type alias Texts =
     , date : String
     , correspondent : String
     , concerning : String
+    , from : String
+    , to : String
     , customFields : String
     , direction : String
     , folderNotOwnerWarning : String
@@ -84,6 +86,8 @@ gb =
     , date = "Date"
     , correspondent = "Correspondent"
     , concerning = "Concerning"
+    , from = "From"
+    , to = "To"
     , customFields = "Custom Fields"
     , direction = "Direction"
     , folderNotOwnerWarning =
@@ -130,6 +134,8 @@ de =
     , date = "Datum"
     , correspondent = "Korrespondent"
     , concerning = "Betreffend"
+    , from = "Von"
+    , to = "An"
     , customFields = "Benutzerfelder"
     , direction = "Richtung"
     , folderNotOwnerWarning =
@@ -177,6 +183,8 @@ fr =
     , date = "Date"
     , correspondent = "Correspondant"
     , concerning = "Concerné"
+    , from = "De"
+    , to = "À"
     , customFields = "Champs Personnalisés"
     , direction = "Direction"
     , folderNotOwnerWarning =

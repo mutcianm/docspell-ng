@@ -8,6 +8,7 @@
 module Util.Item exposing
     ( concTemplate
     , corrTemplate
+    , roleLabel
     , toItemLight
     )
 
@@ -15,8 +16,10 @@ import Api.Model.Attachment exposing (Attachment)
 import Api.Model.AttachmentLight exposing (AttachmentLight)
 import Api.Model.ItemDetail exposing (ItemDetail)
 import Api.Model.ItemLight exposing (ItemLight)
+import Messages.Basics
 import Data.Fields
 import Data.ItemTemplate as IT exposing (ItemTemplate)
+import Api.Model.ItemLink exposing (ItemLink)
 import Data.UiSettings exposing (UiSettings)
 
 
@@ -97,3 +100,21 @@ concTemplate settings =
 
         ( False, False ) ->
             IT.concerning
+
+
+{-| How a role is named on cards: sender and recipient read as From and To.
+-}
+roleLabel : Messages.Basics.Texts -> ItemLink -> String
+roleLabel texts link =
+    case link.roleName of
+        "sender" ->
+            texts.from
+
+        "recipient" ->
+            texts.to
+
+        "concerning" ->
+            texts.concerning
+
+        _ ->
+            Maybe.withDefault link.roleName link.roleLabel

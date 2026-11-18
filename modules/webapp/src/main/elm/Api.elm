@@ -8,6 +8,7 @@
 module Api exposing
     ( addBookmark
     , getEntityTypes
+    , changeItemLinksMultiple
     , postEntityType
     , putEntityType
     , deleteEntityType
@@ -273,6 +274,7 @@ import Api.Model.EntityList exposing (EntityList)
 import Api.Model.EntityRoleList exposing (EntityRoleList)
 import Api.Model.EntityTypeList exposing (EntityTypeList)
 import Api.Model.ItemLinkList exposing (ItemLinkList)
+import Api.Model.ItemsAndLinks exposing (ItemsAndLinks)
 import Api.Model.NewAttrDef exposing (NewAttrDef)
 import Api.Model.NewEntity exposing (NewEntity)
 import Api.Model.NewEntityRole exposing (NewEntityRole)
@@ -597,10 +599,14 @@ getEntities flags typeId query receive =
     Http2.authGet
         { url =
             flags.config.baseUrl
-                ++ "/api/v1/sec/entity?type="
-                ++ Url.percentEncode typeId
-                ++ "&q="
+                ++ "/api/v1/sec/entity?q="
                 ++ Url.percentEncode query
+                ++ (if typeId == "" then
+                        ""
+
+                    else
+                        "&type=" ++ Url.percentEncode typeId
+                   )
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.EntityList.decoder
         }
@@ -631,6 +637,16 @@ deleteEntity flags id receive =
     Http2.authDelete
         { url = flags.config.baseUrl ++ "/api/v1/sec/entity/" ++ id
         , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+changeItemLinksMultiple : Flags -> String -> ItemsAndLinks -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+changeItemLinksMultiple flags roleId data receive =
+    Http2.authPut
+        { url = flags.config.baseUrl ++ "/api/v1/sec/items/links/" ++ roleId
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.ItemsAndLinks.encode data)
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
 
