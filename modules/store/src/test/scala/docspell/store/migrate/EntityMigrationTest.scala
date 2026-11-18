@@ -100,9 +100,11 @@ class EntityMigrationTest extends DatabaseTest {
     for {
       cid <- insertCollective
       // the old tables are gone from the code, so the rows go in as plain SQL
-      _ <- sql"""insert into person (pid, coll_id, name, street, zip, city, country, notes, created, updated, person_use)
+      _ <-
+        sql"""insert into person (pid, coll_id, name, street, zip, city, country, notes, created, updated, person_use)
                  values ('p1', $cid, 'Alice', 'Main 1', '', 'Town', '', 'note', $ts, $ts, 'disabled')""".update.run
-      _ <- sql"""insert into organization (oid, coll_id, name, street, zip, city, country, created, updated, short_name, org_use)
+      _ <-
+        sql"""insert into organization (oid, coll_id, name, street, zip, city, country, created, updated, short_name, org_use)
                  values ('o1', $cid, 'Acme', '', '', '', '', $ts, $ts, 'AC', 'correspondent')""".update.run
       _ <- sql"""insert into equipment (eid, coll_id, name, created, updated, equip_use)
                  values ('e1', $cid, 'Car', $ts, $ts, 'concerning')""".update.run

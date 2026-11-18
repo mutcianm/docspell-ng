@@ -8,6 +8,7 @@ package docspell.store.queries
 
 import cats.data.{NonEmptyList => Nel}
 import cats.effect._
+import cats.implicits._
 
 import docspell.common._
 import docspell.store.records._
@@ -191,5 +192,58 @@ class QEntityLookupTest extends DatabaseTest {
       assertEquals(corrOrg.map(_.id.id), Some("o2"))
       assertEquals(concOrg, None)
     }
+  }
+
+  test("copying links keeps a single-valued role of the target") {
+    val store = h2Store()
+    for {
+      cid <- store.transact(
+        RCollective.insert(
+          RCollective(
+            CollectiveId.unknown,
+            id("lookup3"),
+            CollectiveState.Active,
+            Language.English,
+            true,
+            ts
+          )
+        )
+      )
+      names <- store.transact(for {
+        org <- REntityType.findByKey(REntityType.Key.organization, cid).map(_.get.id)
+        sender <- REntityRole.findByKey(REntityRole.Key.sender, cid).map(_.get)
+        _ <- REntityRole.update(sender.copy(multi = false))
+        _ <- List("a", "b", "c").traverse_(n =>
+          REntity.insert(REntity(id(n), cid, org, n.toUpperCase, None, true, ts, ts))
+        )
+        _ <- List("t", "s1", "s2").traverse_(i =>
+          RItem.insert(
+            RItem(
+              id(i),
+              cid,
+              i,
+              None,
+              "test",
+              Direction.Incoming,
+              ItemState.Created,
+              None,
+              None,
+              None,
+              None,
+              None,
+              ts,
+              ts,
+              None,
+              None
+            )
+          )
+        )
+        _ <- RItemEntity.insert(RItemEntity(id("l1"), id("s1"), id("b"), sender.id))
+        _ <- RItemEntity.insert(RItemEntity(id("l2"), id("s2"), id("c"), sender.id))
+        _ <- QEntity.copyLinks(id("s1"), id("t"), cid)
+        _ <- QEntity.copyLinks(id("s2"), id("t"), cid)
+        links <- QEntity.findItemLinks(id("t"), cid)
+      } yield links.map(_.entity.name))
+    } yield assertEquals(names, Vector("B"))
   }
 }

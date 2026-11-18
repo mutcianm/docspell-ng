@@ -145,8 +145,17 @@ object QEntity {
   def copyLinks(from: Ident, to: Ident, coll: CollectiveId): ConnectionIO[Int] =
     for {
       source <- RItemEntity.findByItem(from)
-      existing <- RItemEntity.findByItem(to).map(_.map(l => (l.entityId, l.roleId)).toSet)
-      missing = source.filterNot(l => existing.contains((l.entityId, l.roleId)))
+      target <- RItemEntity.findByItem(to)
+      singleRoles <- REntityRole.findAll(coll).map(_.filterNot(_.multi).map(_.id).toSet)
+      existing = target.map(l => (l.entityId, l.roleId)).toSet
+      filled = target.map(_.roleId).toSet
+      // a single-valued role keeps the target's entity, or takes the first one offered
+      missing = source
+        .filterNot(l => existing.contains((l.entityId, l.roleId)))
+        .filterNot(l => singleRoles.contains(l.roleId) && filled.contains(l.roleId))
+        .groupBy(_.roleId)
+        .toVector
+        .flatMap { case (role, ls) => if (singleRoles.contains(role)) ls.take(1) else ls }
       n <- missing.traverse(l =>
         Ident
           .randomId[ConnectionIO]
