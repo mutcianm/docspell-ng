@@ -35,6 +35,93 @@ overview](https://docspell.org/#feature-selection) lists some more
 points.
 
 
+## About this fork
+
+**docspell-ng** is a fork of [eikek/docspell](https://github.com/eikek/docspell),
+branched from upstream `master` at
+[`751b0b83`](https://github.com/eikek/docspell/commit/751b0b83) (October 2026).
+The rest of this README is upstream's text and still describes the base project.
+Work on the fork is tracked in [its issues](https://github.com/mutcianm/docspell-ng/issues).
+
+### Entity model
+
+Persons, organizations and equipment are replaced by one generic entity model
+([#20](https://github.com/mutcianm/docspell-ng/issues/20), design in
+[#21](https://github.com/mutcianm/docspell-ng/issues/21)):
+
+- **Entity types** with their own attributes are defined in the app, under
+  *Manage Data → Types & Roles*. The built-in types are *person* and
+  *organization*; *equipment* becomes a regular type that can be renamed or
+  deleted.
+- **Attributes** use the custom field formats. They can hold several values,
+  and values marked as alias, e-mail or website are used to recognize entities
+  in documents.
+- **Items link entities through roles.** Each role can hold several entities.
+  The built-in roles are *sender*, *recipient* and *concerning*: sender and
+  recipient are the parties of a document, while concerning is for what its
+  content refers to (a car, an apartment). Further roles can be added.
+- **Search:** `sender:acme*`, `recipient.id~=…` and
+  `organization.email:*@example.com` work alongside the existing fields; see
+  the [query language docs](website/site/content/docs/query/_index.md).
+- **Migration from upstream data:** correspondents become *sender* on incoming
+  and *recipient* on outgoing items. The former concerning person is the
+  collective's own side: *recipient* on incoming and *sender* on outgoing
+  items. Concerning equipment stays under *concerning*.
+
+### OCR and text extraction
+
+- Additional OCR languages for multilingual documents: `ocr-extra-languages`
+  ([#9](https://github.com/mutcianm/docspell-ng/issues/9)).
+- Fall back to OCR when a PDF's text layer is garbled or in the wrong script:
+  `extraction.pdf.max-garbage-ratio` and `min-script-ratio`
+  ([#10](https://github.com/mutcianm/docspell-ng/issues/10)).
+- The joex image ships the more accurate `tessdata_best` Tesseract models
+  ([#11](https://github.com/mutcianm/docspell-ng/issues/11)).
+- Configurable ocrmypdf mode (`convert.ocrmypdf.mode`: `skip-text`,
+  `redo-ocr`, `force-ocr`) to replace stale text layers
+  ([#12](https://github.com/mutcianm/docspell-ng/issues/12)).
+
+### Fixes and maintenance
+
+- Dropdowns focus their filter input when opened, and dropdowns and menus close
+  on outside click and Escape
+  ([#1](https://github.com/mutcianm/docspell-ng/issues/1),
+  [#2](https://github.com/mutcianm/docspell-ng/issues/2)).
+- Search: tag categories show in the sidebar again
+  ([#13](https://github.com/mutcianm/docspell-ng/issues/13)), and filter changes
+  made while a search is running are no longer dropped
+  ([#14](https://github.com/mutcianm/docspell-ng/issues/14)).
+- Webapp assets are cache-busted between builds of the same version
+  ([#16](https://github.com/mutcianm/docspell-ng/issues/16)).
+- The PDF viewer is pdf.js 5.4 instead of 2.12, which had CVE-2024-4367
+  ([#17](https://github.com/mutcianm/docspell-ng/issues/17)), and libraries with
+  published advisories are updated
+  ([#18](https://github.com/mutcianm/docspell-ng/issues/18)).
+
+### Incompatibilities with upstream
+
+- **Database:** the fork's migrations (from `1.40.0`) move persons,
+  organizations, equipment and contacts into the entity tables and drop the old
+  tables. They cannot be undone; back up the database before upgrading.
+- **REST API:**
+  - Creating, changing and deleting organizations, persons and equipment, and
+    setting `corrOrg`, `corrPerson`, `concPerson` and `concEquipment` on items,
+    are removed. Use `/sec/entity*` and `/sec/item/{id}/links` instead.
+  - Reading still works: the `GET` endpoints for organizations, persons,
+    equipment and contacts return entities in the former shape, and items still
+    carry the four fields, derived from their links. Clients like
+    [dsc](https://github.com/docspell/dsc) and addons keep working.
+- **Person to organization affiliation** and the person, organization and
+  equipment *use* settings are gone; each entity has a single "suggest" flag.
+- **Mailbox scanning** no longer guesses the direction from the sender's
+  address. Mails are incoming unless the scan task sets a direction.
+
+### Images
+
+The fork builds its own Docker images from this repository; see
+[docker/README.md](docker/README.md).
+
+
 ## Impressions
 
 Checkout the short demo videos (<1min), present on the [project
