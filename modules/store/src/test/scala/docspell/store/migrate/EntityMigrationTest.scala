@@ -99,55 +99,17 @@ class EntityMigrationTest extends DatabaseTest {
   private def insertOldData: ConnectionIO[CollectiveId] =
     for {
       cid <- insertCollective
-      _ <- RPerson.insert(
-        RPerson(
-          id("p1"),
-          cid,
-          "Alice",
-          "Main 1",
-          "",
-          "Town",
-          "",
-          Some("note"),
-          ts,
-          ts,
-          None,
-          PersonUse.Disabled: PersonUse
-        )
-      )
-      _ <- ROrganization.insert(
-        ROrganization(
-          id("o1"),
-          cid,
-          "Acme",
-          "",
-          "",
-          "",
-          "",
-          None,
-          ts,
-          ts,
-          Some("AC"),
-          OrgUse.Correspondent: OrgUse
-        )
-      )
-      _ <- REquipment.insert(
-        REquipment(
-          id("e1"),
-          cid,
-          "Car",
-          ts,
-          ts,
-          None,
-          EquipmentUse.Concerning: EquipmentUse
-        )
-      )
-      _ <- RContact.insert(
-        RContact(id("c1"), "info@acme.test", ContactKind.Email, None, Some(id("o1")), ts)
-      )
-      _ <- RContact.insert(
-        RContact(id("c2"), "12345", ContactKind.Phone, Some(id("p1")), None, ts)
-      )
+      // the old tables are gone from the code, so the rows go in as plain SQL
+      _ <- sql"""insert into person (pid, coll_id, name, street, zip, city, country, notes, created, updated, person_use)
+                 values ('p1', $cid, 'Alice', 'Main 1', '', 'Town', '', 'note', $ts, $ts, 'disabled')""".update.run
+      _ <- sql"""insert into organization (oid, coll_id, name, street, zip, city, country, created, updated, short_name, org_use)
+                 values ('o1', $cid, 'Acme', '', '', '', '', $ts, $ts, 'AC', 'correspondent')""".update.run
+      _ <- sql"""insert into equipment (eid, coll_id, name, created, updated, equip_use)
+                 values ('e1', $cid, 'Car', $ts, $ts, 'concerning')""".update.run
+      _ <- sql"""insert into contact (contactid, value_, kind, oid, created)
+                 values ('c1', 'info@acme.test', 'Email', 'o1', $ts)""".update.run
+      _ <- sql"""insert into contact (contactid, value_, kind, pid, created)
+                 values ('c2', '12345', 'Phone', 'p1', $ts)""".update.run
       _ <- RItem.insert(
         item("i1", cid, Direction.Incoming)
           .copy(
