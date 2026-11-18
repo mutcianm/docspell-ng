@@ -712,12 +712,14 @@ object QItem extends FtsSupport {
       ftags = tags.flatten.filter(t => t.collective == collective)
       cfields <- Stream.eval(findCustomFieldValuesForItem(item.id))
       related <- Stream.eval(RItemLink.findLinked(collective, item.id))
+      links <- Stream.eval(QEntity.findItemLinks(item.id, collective))
     } yield ListItemWithTags(
       item,
       RTag.sort(ftags.toList),
       attachs.sortBy(_.position),
       cfields.toList,
-      related.toList
+      related.toList,
+      links.toList
     )
   }
 

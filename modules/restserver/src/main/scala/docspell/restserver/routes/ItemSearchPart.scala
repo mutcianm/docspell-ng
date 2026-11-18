@@ -209,7 +209,8 @@ final class ItemSearchPart[F[_]: Async](
           Nil
         case None =>
           Nil
-      }
+      },
+      links = item.links.map(Conversions.mkItemLink)
     )
 
   def convertParseResult(

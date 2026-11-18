@@ -11,6 +11,7 @@ import cats.implicits._
 
 import docspell.backend.BackendApp
 import docspell.backend.auth.AuthToken
+import docspell.backend.ops.OEntities
 import docspell.backend.ops.OCustomFields.{RemoveValue, SetValue}
 import docspell.common._
 import docspell.restapi.model._
@@ -152,6 +153,26 @@ object ItemMultiRoutes extends NonEmptyListSupport with MultiIdSupport {
           items <- requireNonEmpty(json.items)
           res <- backend.item.setItemDueDate(items, json.date, user.account.collectiveId)
           resp <- Ok(Conversions.basicResult(res, "Item due date updated"))
+        } yield resp
+
+      case req @ PUT -> Root / "links" / Ident(roleId) =>
+        for {
+          json <- req.as[ItemsAndLinks]
+          items <- requireNonEmpty(json.items)
+          resp <- OEntities.LinkMode.fromString(json.mode) match {
+            case Right(mode) =>
+              backend.entities
+                .changeItemLinks(
+                  user.account.collectiveId,
+                  items,
+                  roleId,
+                  json.entities,
+                  mode
+                )
+                .flatMap(r => Ok(EntityRoutes.basicResult(r)))
+            case Left(err) =>
+              BadRequest(BasicResult(success = false, err))
+          }
         } yield resp
 
       case req @ PUT -> Root / "corrOrg" =>

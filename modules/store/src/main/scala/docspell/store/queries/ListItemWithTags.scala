@@ -14,5 +14,6 @@ case class ListItemWithTags(
     tags: List[RTag],
     attachments: List[AttachmentLight],
     customfields: List[ItemFieldValue],
-    relatedItems: List[Ident]
+    relatedItems: List[Ident],
+    links: List[QEntity.ItemLink]
 )

@@ -232,7 +232,8 @@ trait Conversions {
       Nil, // customfields
       Nil, // related items
       i.notes,
-      Nil // highlight
+      Nil, // highlight
+      Nil // links
     )
 
   def mkItemLightWithTags(i: ListItemWithTags): ItemLight =
@@ -241,7 +242,8 @@ trait Conversions {
         tags = i.tags.map(mkTag),
         attachments = i.attachments.map(mkAttachmentLight),
         customfields = i.customfields.map(mkItemFieldValue),
-        relatedItems = i.relatedItems
+        relatedItems = i.relatedItems,
+        links = i.links.map(mkItemLink)
       )
 
   def mkAttachmentLight(qa: QAttachmentLight): AttachmentLight =

@@ -42,5 +42,5 @@ case class ListItem(
     }
 
   def toWithTags: ListItemWithTags =
-    ListItemWithTags(this, Nil, Nil, Nil, Nil)
+    ListItemWithTags(this, Nil, Nil, Nil, Nil, Nil)
 }

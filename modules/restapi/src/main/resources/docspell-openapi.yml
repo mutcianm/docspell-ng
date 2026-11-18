@@ -4340,6 +4340,34 @@ paths:
               schema:
                 $ref: "#/components/schemas/BasicResult"
 
+  /sec/items/links/{roleId}:
+    parameters:
+      - $ref: "#/components/parameters/roleId"
+    put:
+      operationId: "sec-items-links-change"
+      tags:
+        - Item (Multi Edit)
+      summary: Change the entities linked under a role on several items.
+      description: |
+        Adds, replaces or removes the given entities under the role on
+        all given items. If any item cannot be changed, none is.
+      security:
+        - authTokenHeader: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemsAndLinks"
+      responses:
+        422:
+          description: BadRequest
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResult"
+
   /sec/items/corrOrg:
     put:
       operationId: "sec-items-set-corr-org-all"
@@ -9378,6 +9406,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/HighlightEntry"
+        links:
+          description: |
+            The entities linked to this item, with their role. Only
+            filled in results that include details.
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemLink"
+
     AttachmentLight:
       description: |
         Some little details about an attachment.
@@ -9915,6 +9951,32 @@ components:
         typeId:
           type: string
           format: ident
+
+    ItemsAndLinks:
+      description: |
+        Items and entities for changing links on several items.
+        `mode` is one of `add`, `replace` or `remove`.
+      required:
+        - items
+        - entities
+        - mode
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+            format: ident
+        entities:
+          type: array
+          items:
+            type: string
+            format: ident
+        mode:
+          type: string
+          enum:
+            - add
+            - replace
+            - remove
 
     ItemLinkList:
       description: |

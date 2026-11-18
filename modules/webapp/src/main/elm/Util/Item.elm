@@ -40,6 +40,7 @@ toItemLight detail =
     , notes = detail.notes
     , relatedItems = List.map .id detail.relatedItems
     , highlighting = []
+    , links = detail.links
     }
 
 
