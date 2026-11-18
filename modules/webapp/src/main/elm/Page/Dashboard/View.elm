@@ -10,12 +10,11 @@ module Page.Dashboard.View exposing (viewContent, viewSidebar)
 import Api.Model.VersionInfo exposing (VersionInfo)
 import Comp.DashboardManage
 import Comp.DashboardView
-import Comp.EquipmentManage
+import Comp.EntityManage
+import Comp.EntityTypeManage
 import Comp.FolderManage
 import Comp.NotificationHookManage
-import Comp.OrgManage
 import Comp.PeriodicQueryTaskManage
-import Comp.PersonManage
 import Comp.ShareManage
 import Comp.SourceManage
 import Comp.TagManage
@@ -85,14 +84,11 @@ viewContent texts flags settings model =
             Share m ->
                 viewShare texts flags settings m
 
-            Organization m ->
-                viewOrganization texts settings m
+            Entities m ->
+                viewEntities texts m
 
-            Person m ->
-                viewPerson texts settings m
-
-            Equipment m ->
-                viewEquipment texts m
+            EntityTypes m ->
+                viewEntityTypes texts m
 
             Tags m ->
                 viewTags texts settings m
@@ -149,36 +145,25 @@ viewTags texts settings model =
         ]
 
 
-viewEquipment : Texts -> Comp.EquipmentManage.Model -> Html Msg
-viewEquipment texts model =
+viewEntities : Texts -> Comp.EntityManage.Model -> Html Msg
+viewEntities texts model =
     div []
         [ h1 [ class S.header1 ]
-            [ text texts.basics.equipment
+            [ text texts.entities
             ]
-        , Html.map EquipmentMsg <|
-            Comp.EquipmentManage.view2 texts.equipManage model
+        , Html.map EntityMsg <|
+            Comp.EntityManage.view texts.entityManage model
         ]
 
 
-viewPerson : Texts -> UiSettings -> Comp.PersonManage.Model -> Html Msg
-viewPerson texts settings model =
+viewEntityTypes : Texts -> Comp.EntityTypeManage.Model -> Html Msg
+viewEntityTypes texts model =
     div []
         [ h1 [ class S.header1 ]
-            [ text texts.basics.person
+            [ text texts.entityTypes
             ]
-        , Html.map PersonMsg <|
-            Comp.PersonManage.view2 texts.personManage settings model
-        ]
-
-
-viewOrganization : Texts -> UiSettings -> Comp.OrgManage.Model -> Html Msg
-viewOrganization texts settings model =
-    div []
-        [ h1 [ class S.header1 ]
-            [ text texts.basics.organization
-            ]
-        , Html.map OrganizationMsg <|
-            Comp.OrgManage.view2 texts.organizationManage settings model
+        , Html.map EntityTypeMsg <|
+            Comp.EntityTypeManage.view texts.entityTypeManage model
         ]
 
 

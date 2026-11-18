@@ -25,10 +25,6 @@ module Api exposing
     , deleteEntity
     , getItemLinks
     , setItemLinks
-    , addConcEquip
-    , addConcPerson
-    , addCorrOrg
-    , addCorrPerson
     , addDashboard
     , addMember
     , addRelatedItems
@@ -70,16 +66,13 @@ module Api exposing
     , deleteCustomValue
     , deleteCustomValueMultiple
     , deleteDashboard
-    , deleteEquip
     , deleteFolder
     , deleteHook
     , deleteImapSettings
     , deleteItem
     , deleteMailSettings
     , deleteNotifyDueItems
-    , deleteOrg
     , deletePeriodicQueryTask
-    , deletePerson
     , deleteScanMailbox
     , deleteShare
     , deleteSource
@@ -153,10 +146,7 @@ module Api exposing
     , newInvite
     , openIdAuthLink
     , postCustomField
-    , postEquipment
     , postNewUser
-    , postOrg
-    , postPerson
     , postSource
     , postTag
     , putCustomField
@@ -183,15 +173,7 @@ module Api exposing
     , setAttachmentExtractedText
     , setAttachmentName
     , setCollectiveSettings
-    , setConcEquip
-    , setConcEquipmentMultiple
-    , setConcPerson
-    , setConcPersonMultiple
     , setConfirmed
-    , setCorrOrg
-    , setCorrOrgMultiple
-    , setCorrPerson
-    , setCorrPersonMultiple
     , setDateMultiple
     , setDirection
     , setDirectionMultiple
@@ -372,7 +354,6 @@ import Util.Http as Http2
 import Util.Result
 
 
-
 --- Custom Fields
 
 
@@ -483,7 +464,6 @@ deleteCustomField flags id receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Entities
@@ -670,7 +650,6 @@ setItemLinks flags item roleId ids receive =
         }
 
 
-
 --- Folders
 
 
@@ -757,7 +736,6 @@ getFolders flags query order owningOnly receive =
         }
 
 
-
 --- Full-Text
 
 
@@ -769,7 +747,6 @@ startReIndex flags receive =
         , body = Http.emptyBody
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Scan Mailboxes
@@ -840,7 +817,6 @@ getScanMailbox flags receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.ScanMailboxSettingsList.decoder
         }
-
 
 
 --- NotifyDueItems
@@ -927,7 +903,6 @@ submitNotifyDueItems flags settings receive =
         }
 
 
-
 --- PeriodicQueryTask
 
 
@@ -1012,7 +987,6 @@ submitPeriodicQuery flags settings receive =
         }
 
 
-
 --- CalEvent
 
 
@@ -1030,7 +1004,6 @@ checkCalEvent flags input receive =
         }
 
 
-
 --- Delete Attachment
 
 
@@ -1045,7 +1018,6 @@ deleteAttachment flags attachId receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Delete Attachments
@@ -1065,7 +1037,6 @@ deleteAttachments flags attachIds receive =
         }
 
 
-
 --- Attachment Metadata
 
 
@@ -1080,7 +1051,6 @@ getAttachmentMeta flags id receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.AttachmentMeta.decoder
         }
-
 
 
 --- Get Sent Mails
@@ -1099,7 +1069,6 @@ getSentMails flags item receive =
         }
 
 
-
 --- Mail Send
 
 
@@ -1115,7 +1084,6 @@ sendMail flags opts receive =
         , body = Http.jsonBody (Api.Model.SimpleMail.encode opts.mail)
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Mail Settings
@@ -1205,7 +1173,6 @@ createImapSettings flags mname ems receive =
                 , body = Http.jsonBody (Api.Model.ImapSettings.encode ems)
                 , expect = Http.expectJson receive Api.Model.BasicResult.decoder
                 }
-
 
 
 --- Upload
@@ -1306,7 +1273,6 @@ uploadSingle flags sourceId meta track files receive =
         }
 
 
-
 --- Registration
 
 
@@ -1326,7 +1292,6 @@ newInvite flags req receive =
         , body = Http.jsonBody (Api.Model.GenInvite.encode req)
         , expect = Http.expectJson receive Api.Model.InviteResult.decoder
         }
-
 
 
 --- Login
@@ -1406,7 +1371,6 @@ refreshSessionTask flags =
         }
 
 
-
 --- Version
 
 
@@ -1416,7 +1380,6 @@ versionInfo flags receive =
         { url = flags.config.baseUrl ++ "/api/info/version"
         , expect = Http.expectJson receive Api.Model.VersionInfo.decoder
         }
-
 
 
 --- Collective
@@ -1495,7 +1458,6 @@ setCollectiveSettings flags settings receive =
         }
 
 
-
 --- Contacts
 
 
@@ -1539,7 +1501,6 @@ getContacts flags kind q receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.ContactList.decoder
         }
-
 
 
 --- Tags
@@ -1600,7 +1561,6 @@ deleteTag flags tag receive =
         }
 
 
-
 --- Equipments
 
 
@@ -1625,33 +1585,6 @@ getEquipment flags id receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.Equipment.decoder
         }
-
-
-postEquipment : Flags -> Equipment -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-postEquipment flags equip receive =
-    let
-        params =
-            { url = flags.config.baseUrl ++ "/api/v1/sec/equipment"
-            , account = getAccount flags
-            , body = Http.jsonBody (Api.Model.Equipment.encode equip)
-            , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-            }
-    in
-    if equip.id == "" then
-        Http2.authPost params
-
-    else
-        Http2.authPut params
-
-
-deleteEquip : Flags -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-deleteEquip flags equip receive =
-    Http2.authDelete
-        { url = flags.config.baseUrl ++ "/api/v1/sec/equipment/" ++ equip
-        , account = getAccount flags
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
 
 
 --- Organization
@@ -1694,33 +1627,6 @@ getOrganizations flags query order receive =
         }
 
 
-postOrg : Flags -> Organization -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-postOrg flags org receive =
-    let
-        params =
-            { url = flags.config.baseUrl ++ "/api/v1/sec/organization"
-            , account = getAccount flags
-            , body = Http.jsonBody (Api.Model.Organization.encode org)
-            , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-            }
-    in
-    if org.id == "" then
-        Http2.authPost params
-
-    else
-        Http2.authPut params
-
-
-deleteOrg : Flags -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-deleteOrg flags org receive =
-    Http2.authDelete
-        { url = flags.config.baseUrl ++ "/api/v1/sec/organization/" ++ org
-        , account = getAccount flags
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-
 --- Person
 
 
@@ -1754,33 +1660,6 @@ getPersons flags query order receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.PersonList.decoder
         }
-
-
-postPerson : Flags -> Person -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-postPerson flags person receive =
-    let
-        params =
-            { url = flags.config.baseUrl ++ "/api/v1/sec/person"
-            , account = getAccount flags
-            , body = Http.jsonBody (Api.Model.Person.encode person)
-            , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-            }
-    in
-    if person.id == "" then
-        Http2.authPost params
-
-    else
-        Http2.authPut params
-
-
-deletePerson : Flags -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-deletePerson flags person receive =
-    Http2.authDelete
-        { url = flags.config.baseUrl ++ "/api/v1/sec/person/" ++ person
-        , account = getAccount flags
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
 
 
 --- Sources
@@ -1824,7 +1703,6 @@ deleteSource flags src receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Users
@@ -1885,7 +1763,6 @@ getDeleteUserData flags username receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.DeleteUserData.decoder
         }
-
 
 
 --- Job Queue
@@ -1950,7 +1827,6 @@ getJobQueueStateTask flags =
         , resolver = Http2.jsonResolver Api.Model.JobQueueState.decoder
         , timeout = Nothing
         }
-
 
 
 --- Item (Mulit Edit)
@@ -2132,62 +2008,6 @@ setDueDateMultiple flags data receive =
         }
 
 
-setCorrOrgMultiple :
-    Flags
-    -> ItemsAndRef
-    -> (Result Http.Error BasicResult -> msg)
-    -> Cmd msg
-setCorrOrgMultiple flags data receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/items/corrOrg"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.ItemsAndRef.encode data)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-setCorrPersonMultiple :
-    Flags
-    -> ItemsAndRef
-    -> (Result Http.Error BasicResult -> msg)
-    -> Cmd msg
-setCorrPersonMultiple flags data receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/items/corrPerson"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.ItemsAndRef.encode data)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-setConcPersonMultiple :
-    Flags
-    -> ItemsAndRef
-    -> (Result Http.Error BasicResult -> msg)
-    -> Cmd msg
-setConcPersonMultiple flags data receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/items/concPerson"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.ItemsAndRef.encode data)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-setConcEquipmentMultiple :
-    Flags
-    -> ItemsAndRef
-    -> (Result Http.Error BasicResult -> msg)
-    -> Cmd msg
-setConcEquipmentMultiple flags data receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/items/concEquipment"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.ItemsAndRef.encode data)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
 deleteAllItems :
     Flags
     -> List String
@@ -2214,7 +2034,6 @@ restoreAllItems flags ids receive =
         , body = Http.jsonBody (Api.Model.IdList.encode (IdList ids))
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Item
@@ -2472,86 +2291,6 @@ setFolder flags item id receive =
         }
 
 
-setCorrOrg : Flags -> String -> OptionalId -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-setCorrOrg flags item id receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/corrOrg"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.OptionalId.encode id)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-addCorrOrg : Flags -> String -> Organization -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-addCorrOrg flags item org receive =
-    Http2.authPost
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/corrOrg"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.Organization.encode org)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-setCorrPerson : Flags -> String -> OptionalId -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-setCorrPerson flags item id receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/corrPerson"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.OptionalId.encode id)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-addCorrPerson : Flags -> String -> Person -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-addCorrPerson flags item person receive =
-    Http2.authPost
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/corrPerson"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.Person.encode person)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-setConcPerson : Flags -> String -> OptionalId -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-setConcPerson flags item id receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/concPerson"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.OptionalId.encode id)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-addConcPerson : Flags -> String -> Person -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-addConcPerson flags item person receive =
-    Http2.authPost
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/concPerson"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.Person.encode person)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-setConcEquip : Flags -> String -> OptionalId -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-setConcEquip flags item id receive =
-    Http2.authPut
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/concEquipment"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.OptionalId.encode id)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
-addConcEquip : Flags -> String -> Equipment -> (Result Http.Error BasicResult -> msg) -> Cmd msg
-addConcEquip flags item equip receive =
-    Http2.authPost
-        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/concEquipment"
-        , account = getAccount flags
-        , body = Http.jsonBody (Api.Model.Equipment.encode equip)
-        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
-        }
-
-
 setItemName : Flags -> String -> OptionalText -> (Result Http.Error BasicResult -> msg) -> Cmd msg
 setItemName flags item text receive =
     Http2.authPut
@@ -2638,7 +2377,6 @@ getItemProposals flags item receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.ItemProposals.decoder
         }
-
 
 
 --- Client Settings
@@ -2745,7 +2483,6 @@ saveUserClientSettingsBy flags modify receive =
             saveClientSettingsTask flags s Data.AccountScope.User
     in
     Task.andThen (modify >> save) readTask |> Task.attempt receive
-
 
 
 --- Dashboards
@@ -2873,7 +2610,6 @@ deleteDashboard flags name scope receive =
     deleteDashboardTask flags name scope |> Task.attempt receive
 
 
-
 --- Query Bookmarks
 
 
@@ -2975,7 +2711,6 @@ deleteBookmark flags id receive =
         }
 
 
-
 --- OTP
 
 
@@ -3016,7 +2751,6 @@ disableOtp flags otp receive =
         , body = Http.jsonBody (Api.Model.OtpConfirm.encode otp)
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Share
@@ -3173,7 +2907,6 @@ shareFileURL attachId =
     "/api/v1/share/attachment/" ++ attachId
 
 
-
 --- NotificationChannel
 
 
@@ -3228,7 +2961,6 @@ updateChannel flags hook receive =
         , body = Http.jsonBody (Data.NotificationChannel.encode hook)
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- NotificationHook
@@ -3312,7 +3044,6 @@ verifyJsonFilter flags query receive =
         }
 
 
-
 --- Item Links
 
 
@@ -3371,7 +3102,6 @@ removeRelatedItem flags item1 item2 receive =
         , account = getAccount flags
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- DownloadAll
@@ -3435,7 +3165,6 @@ shareDownloadAllSubmit flags token req receive =
 shareDownloadAllLink : Flags -> String -> String
 shareDownloadAllLink flags id =
     flags.config.baseUrl ++ "/api/v1/share/downloadAll/file/" ++ id
-
 
 
 --- Addons
@@ -3528,7 +3257,6 @@ addonRunExistingItem flags input receive =
         , body = Http.jsonBody (Api.Model.AddonRunExistingItem.encode input)
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
-
 
 
 --- Helper

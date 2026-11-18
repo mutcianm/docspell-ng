@@ -18,7 +18,6 @@ import Comp.ItemDetail.Model
         , Msg(..)
         , NotesField(..)
         , SaveNameState(..)
-        , personMatchesOrg
         )
 import Comp.KeyInput
 import Comp.SimpleTextInput
@@ -39,7 +38,6 @@ import Page exposing (Page(..))
 import Set exposing (Set)
 import Styles as S
 import Util.Folder
-import Util.Person
 
 
 view2 : Texts -> Flags -> UiSettings -> Model -> Html Msg
@@ -142,13 +140,6 @@ formTabs texts flags settings model =
 
         idNameCfg =
             { makeOption = \e -> { text = e.name, additional = "" }
-            , labelColor = \_ -> \_ -> ""
-            , placeholder = texts.basics.selectPlaceholder
-            , style = dds
-            }
-
-        personCfg =
-            { makeOption = \p -> Util.Person.mkPersonOption p model.allPersons
             , labelColor = \_ -> \_ -> ""
             , placeholder = texts.basics.selectPlaceholder
             , style = dds
@@ -346,42 +337,6 @@ renderSuggestions texts model mkName idnames tagger =
                     )
             )
         ]
-
-
-renderOrgSuggestions : Texts -> Model -> Html Msg
-renderOrgSuggestions texts model =
-    renderSuggestions texts
-        model
-        .name
-        (List.take 6 model.itemProposals.corrOrg)
-        SetCorrOrgSuggestion
-
-
-renderCorrPersonSuggestions : Texts -> Model -> Html Msg
-renderCorrPersonSuggestions texts model =
-    renderSuggestions texts
-        model
-        .name
-        (List.take 6 model.itemProposals.corrPerson)
-        SetCorrPersonSuggestion
-
-
-renderConcPersonSuggestions : Texts -> Model -> Html Msg
-renderConcPersonSuggestions texts model =
-    renderSuggestions texts
-        model
-        .name
-        (List.take 6 model.itemProposals.concPerson)
-        SetConcPersonSuggestion
-
-
-renderConcEquipSuggestions : Texts -> Model -> Html Msg
-renderConcEquipSuggestions texts model =
-    renderSuggestions texts
-        model
-        .name
-        (List.take 6 model.itemProposals.concEquipment)
-        SetConcEquipSuggestion
 
 
 renderItemDateSuggestions : Texts -> Model -> Html Msg

@@ -9,15 +9,8 @@ module Comp.DetailEdit exposing
     ( Model
     , Msg
     , Value(..)
-    , editEquip
-    , editOrg
-    , editPerson
     , formHeading
-    , initConcPerson
-    , initCorrPerson
     , initCustomField
-    , initEquip
-    , initOrg
     , initTag
     , initTagByName
     , update
@@ -34,17 +27,10 @@ rendered in a modal.
 
 import Api
 import Api.Model.BasicResult exposing (BasicResult)
-import Api.Model.Equipment exposing (Equipment)
 import Api.Model.NewCustomField exposing (NewCustomField)
-import Api.Model.Organization exposing (Organization)
-import Api.Model.Person exposing (Person)
-import Api.Model.ReferenceList exposing (ReferenceList)
 import Api.Model.Tag exposing (Tag)
 import Comp.Basic as B
 import Comp.CustomFieldForm
-import Comp.EquipmentForm
-import Comp.OrgForm
-import Comp.PersonForm
 import Comp.TagForm
 import Data.Flags exposing (Flags)
 import Data.Icons as Icons
@@ -105,37 +91,18 @@ isSuccess state =
 
 type FormModel
     = TM Comp.TagForm.Model
-    | PMR Comp.PersonForm.Model
-    | PMC Comp.PersonForm.Model
-    | OM Comp.OrgForm.Model
-    | EM Comp.EquipmentForm.Model
     | CFM Comp.CustomFieldForm.Model
 
 
 fold :
     (Comp.TagForm.Model -> a)
-    -> (Comp.PersonForm.Model -> a)
-    -> (Comp.OrgForm.Model -> a)
-    -> (Comp.EquipmentForm.Model -> a)
     -> (Comp.CustomFieldForm.Model -> a)
     -> FormModel
     -> a
-fold ft fp fo fe fcf model =
+fold ft fcf model =
     case model of
         TM tm ->
             ft tm
-
-        PMR pm ->
-            fp pm
-
-        PMC pm ->
-            fp pm
-
-        OM om ->
-            fo om
-
-        EM em ->
-            fe em
 
         CFM fm ->
             fcf fm
@@ -149,69 +116,6 @@ init itemId fm =
     , loading = False
     , formState = FormStateInitial
     }
-
-
-initEquip : String -> Comp.EquipmentForm.Model -> Model
-initEquip itemId em =
-    init itemId (EM em)
-
-
-initOrg : String -> Comp.OrgForm.Model -> Model
-initOrg itemId om =
-    init itemId (OM om)
-
-
-editOrg : Flags -> String -> Comp.OrgForm.Model -> ( Model, Cmd Msg )
-editOrg flags orgId om =
-    ( { form = OM om
-      , itemId = ""
-      , submitting = False
-      , loading = True
-      , formState = FormStateInitial
-      }
-    , Api.getOrgFull orgId flags GetOrgResp
-    )
-
-
-editPerson : Flags -> String -> Comp.PersonForm.Model -> ( Model, Cmd Msg )
-editPerson flags persId pm =
-    ( { form = PMC pm
-      , itemId = ""
-      , submitting = False
-      , loading = True
-      , formState = FormStateInitial
-      }
-    , Cmd.batch
-        [ Api.getPersonFull persId flags GetPersonResp
-        , Api.getOrgLight flags GetOrgsResp
-        ]
-    )
-
-
-editEquip : Flags -> String -> Comp.EquipmentForm.Model -> ( Model, Cmd Msg )
-editEquip flags equipId em =
-    ( { form = EM em
-      , itemId = ""
-      , submitting = False
-      , loading = True
-      , formState = FormStateInitial
-      }
-    , Api.getEquipment flags equipId GetEquipResp
-    )
-
-
-initCorrPerson : Flags -> String -> Comp.PersonForm.Model -> ( Model, Cmd Msg )
-initCorrPerson flags itemId pm =
-    ( init itemId (PMR pm)
-    , Api.getOrgLight flags GetOrgsResp
-    )
-
-
-initConcPerson : Flags -> String -> Comp.PersonForm.Model -> ( Model, Cmd Msg )
-initConcPerson flags itemId pm =
-    ( init itemId (PMC pm)
-    , Api.getOrgLight flags GetOrgsResp
-    )
 
 
 initTag : String -> Comp.TagForm.Model -> Model
@@ -242,24 +146,14 @@ initCustomField itemId =
 
 type Msg
     = TagMsg Comp.TagForm.Msg
-    | PersonMsg Comp.PersonForm.Msg
-    | OrgMsg Comp.OrgForm.Msg
-    | EquipMsg Comp.EquipmentForm.Msg
     | CustomFieldMsg Comp.CustomFieldForm.Msg
     | Submit
     | Cancel
     | SubmitResp (Result Http.Error BasicResult)
-    | GetOrgResp (Result Http.Error Organization)
-    | GetPersonResp (Result Http.Error Person)
-    | GetEquipResp (Result Http.Error Equipment)
-    | GetOrgsResp (Result Http.Error ReferenceList)
 
 
 type Value
     = SubmitTag Tag
-    | SubmitPerson Person
-    | SubmitOrg Organization
-    | SubmitEquip Equipment
     | SubmitCustomField NewCustomField
     | CancelForm
 
@@ -269,18 +163,6 @@ makeValue fm =
     case fm of
         TM tm ->
             SubmitTag (Comp.TagForm.getTag tm)
-
-        PMR pm ->
-            SubmitPerson (Comp.PersonForm.getPerson pm)
-
-        PMC pm ->
-            SubmitPerson (Comp.PersonForm.getPerson pm)
-
-        OM om ->
-            SubmitOrg (Comp.OrgForm.getOrg om)
-
-        EM em ->
-            SubmitEquip (Comp.EquipmentForm.getEquipment em)
 
         CFM fieldModel ->
             let
@@ -304,136 +186,6 @@ update flags msg model =
     case msg of
         Cancel ->
             ( model, Cmd.none, Just CancelForm )
-
-        GetOrgResp (Ok org) ->
-            case model.form of
-                OM om ->
-                    let
-                        ( om_, oc_ ) =
-                            Comp.OrgForm.update flags (Comp.OrgForm.SetOrg org) om
-                    in
-                    ( { model
-                        | loading = False
-                        , form = OM om_
-                      }
-                    , Cmd.map OrgMsg oc_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( { model | loading = False }
-                    , Cmd.none
-                    , Nothing
-                    )
-
-        GetOrgResp (Err err) ->
-            ( { model
-                | loading = False
-                , formState = FormStateHttpError err
-              }
-            , Cmd.none
-            , Nothing
-            )
-
-        GetPersonResp (Ok pers) ->
-            case model.form of
-                PMC pm ->
-                    let
-                        ( pm_, pc_ ) =
-                            Comp.PersonForm.update flags (Comp.PersonForm.SetPerson pers) pm
-                    in
-                    ( { model
-                        | loading = False
-                        , form = PMC pm_
-                      }
-                    , Cmd.map PersonMsg pc_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( { model | loading = False }
-                    , Cmd.none
-                    , Nothing
-                    )
-
-        GetPersonResp (Err err) ->
-            ( { model
-                | loading = False
-                , formState = FormStateHttpError err
-              }
-            , Cmd.none
-            , Nothing
-            )
-
-        GetOrgsResp (Ok list) ->
-            case model.form of
-                PMC pm ->
-                    let
-                        ( p_, c_ ) =
-                            Comp.PersonForm.update flags (Comp.PersonForm.SetOrgs list.items) pm
-                    in
-                    ( { model
-                        | loading = False
-                        , form = PMC p_
-                      }
-                    , Cmd.map PersonMsg c_
-                    , Nothing
-                    )
-
-                PMR pm ->
-                    let
-                        ( p_, c_ ) =
-                            Comp.PersonForm.update flags (Comp.PersonForm.SetOrgs list.items) pm
-                    in
-                    ( { model
-                        | loading = False
-                        , form = PMR p_
-                      }
-                    , Cmd.map PersonMsg c_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( { model | loading = False }, Cmd.none, Nothing )
-
-        GetOrgsResp (Err err) ->
-            ( { model
-                | loading = False
-                , formState = FormStateHttpError err
-              }
-            , Cmd.none
-            , Nothing
-            )
-
-        GetEquipResp (Ok equip) ->
-            case model.form of
-                EM em ->
-                    let
-                        ( em_, ec_ ) =
-                            Comp.EquipmentForm.update flags (Comp.EquipmentForm.SetEquipment equip) em
-                    in
-                    ( { model
-                        | loading = False
-                        , form = EM em_
-                      }
-                    , Cmd.map EquipMsg ec_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( { model | loading = False }
-                    , Cmd.none
-                    , Nothing
-                    )
-
-        GetEquipResp (Err err) ->
-            ( { model
-                | loading = False
-                , formState = FormStateHttpError err
-              }
-            , Cmd.none
-            , Nothing
-            )
 
         SubmitResp (Ok res) ->
             let
@@ -485,90 +237,6 @@ update flags msg model =
                         , Nothing
                         )
 
-                OM om ->
-                    let
-                        org =
-                            Comp.OrgForm.getOrg om
-                    in
-                    if Comp.OrgForm.isValid om then
-                        ( { model | submitting = True }
-                        , if model.itemId == "" then
-                            Api.postOrg flags org SubmitResp
-
-                          else
-                            Api.addCorrOrg flags model.itemId org SubmitResp
-                        , Nothing
-                        )
-
-                    else
-                        ( { model | formState = FormStateMissingRequiredFields }
-                        , Cmd.none
-                        , Nothing
-                        )
-
-                PMC pm ->
-                    let
-                        pers =
-                            Comp.PersonForm.getPerson pm
-                    in
-                    if Comp.PersonForm.isValid pm then
-                        ( { model | submitting = True }
-                        , if model.itemId == "" then
-                            Api.postPerson flags pers SubmitResp
-
-                          else
-                            Api.addConcPerson flags model.itemId pers SubmitResp
-                        , Nothing
-                        )
-
-                    else
-                        ( { model | formState = FormStateMissingRequiredFields }
-                        , Cmd.none
-                        , Nothing
-                        )
-
-                PMR pm ->
-                    let
-                        pers =
-                            Comp.PersonForm.getPerson pm
-                    in
-                    if Comp.PersonForm.isValid pm then
-                        ( { model | submitting = True }
-                        , if model.itemId == "" then
-                            Api.postPerson flags pers SubmitResp
-
-                          else
-                            Api.addCorrPerson flags model.itemId pers SubmitResp
-                        , Nothing
-                        )
-
-                    else
-                        ( { model | formState = FormStateMissingRequiredFields }
-                        , Cmd.none
-                        , Nothing
-                        )
-
-                EM em ->
-                    let
-                        equip =
-                            Comp.EquipmentForm.getEquipment em
-                    in
-                    if Comp.EquipmentForm.isValid em then
-                        ( { model | submitting = True }
-                        , if model.itemId == "" then
-                            Api.postEquipment flags equip SubmitResp
-
-                          else
-                            Api.addConcEquip flags model.itemId equip SubmitResp
-                        , Nothing
-                        )
-
-                    else
-                        ( { model | formState = FormStateMissingRequiredFields }
-                        , Cmd.none
-                        , Nothing
-                        )
-
                 CFM fm ->
                     let
                         cfield =
@@ -599,73 +267,6 @@ update flags msg model =
                         , formState = FormStateInitial
                       }
                     , Cmd.map TagMsg tc_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( model, Cmd.none, Nothing )
-
-        PersonMsg lm ->
-            case model.form of
-                PMR pm ->
-                    let
-                        ( pm_, pc_ ) =
-                            Comp.PersonForm.update flags lm pm
-                    in
-                    ( { model
-                        | form = PMR pm_
-                        , formState = FormStateInitial
-                      }
-                    , Cmd.map PersonMsg pc_
-                    , Nothing
-                    )
-
-                PMC pm ->
-                    let
-                        ( pm_, pc_ ) =
-                            Comp.PersonForm.update flags lm pm
-                    in
-                    ( { model
-                        | form = PMC pm_
-                        , formState = FormStateInitial
-                      }
-                    , Cmd.map PersonMsg pc_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( model, Cmd.none, Nothing )
-
-        OrgMsg lm ->
-            case model.form of
-                OM om ->
-                    let
-                        ( om_, oc_ ) =
-                            Comp.OrgForm.update flags lm om
-                    in
-                    ( { model
-                        | form = OM om_
-                        , formState = FormStateInitial
-                      }
-                    , Cmd.map OrgMsg oc_
-                    , Nothing
-                    )
-
-                _ ->
-                    ( model, Cmd.none, Nothing )
-
-        EquipMsg lm ->
-            case model.form of
-                EM em ->
-                    let
-                        ( em_, ec_ ) =
-                            Comp.EquipmentForm.update flags lm em
-                    in
-                    ( { model
-                        | form = EM em_
-                        , formState = FormStateInitial
-                      }
-                    , Cmd.map EquipMsg ec_
                     , Nothing
                     )
 
@@ -706,16 +307,10 @@ formHeading texts classes model =
     let
         heading =
             fold (\_ -> texts.addTagHeader)
-                (\_ -> texts.addPersonHeader)
-                (\_ -> texts.addOrgHeader)
-                (\_ -> texts.addEquipmentHeader)
                 (\_ -> texts.addCustomFieldHeader)
 
         headIcon =
             fold (\_ -> Icons.tagIcon "mr-2")
-                (\_ -> Icons.personIcon "mr-2")
-                (\_ -> Icons.organizationIcon "mr-2")
-                (\_ -> Icons.equipmentIcon "mt-2")
                 (\_ -> Icons.customFieldIcon2 "mr-2")
     in
     div [ class classes ]
@@ -732,16 +327,10 @@ viewModal2 texts settings mm =
 
         heading =
             fold (\_ -> texts.addTagHeader)
-                (\_ -> texts.addPersonHeader)
-                (\_ -> texts.addOrgHeader)
-                (\_ -> texts.addEquipmentHeader)
                 (\_ -> texts.addCustomFieldHeader)
 
         headIcon =
             fold (\_ -> Icons.tagIcon "mr-2")
-                (\_ -> Icons.personIcon "mr-2")
-                (\_ -> Icons.organizationIcon "mr-2")
-                (\_ -> Icons.equipmentIcon "mt-2")
                 (\_ -> Icons.customFieldIcon2 "mr-2")
     in
     div
@@ -835,18 +424,6 @@ viewIntern2 texts settings withButtons model =
     , case model.form of
         TM tm ->
             Html.map TagMsg (Comp.TagForm.view2 texts.tagForm settings tm)
-
-        PMR pm ->
-            Html.map PersonMsg (Comp.PersonForm.view2 texts.personForm True settings pm)
-
-        PMC pm ->
-            Html.map PersonMsg (Comp.PersonForm.view2 texts.personForm True settings pm)
-
-        OM om ->
-            Html.map OrgMsg (Comp.OrgForm.view2 texts.orgForm True settings om)
-
-        EM em ->
-            Html.map EquipMsg (Comp.EquipmentForm.view2 texts.equipmentForm em)
 
         CFM fm ->
             div []

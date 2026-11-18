@@ -12,12 +12,11 @@ import Messages.Basics
 import Messages.Comp.BookmarkChooser
 import Messages.Comp.DashboardManage
 import Messages.Comp.DashboardView
-import Messages.Comp.EquipmentManage
+import Messages.Comp.EntityManage
+import Messages.Comp.EntityTypeManage
 import Messages.Comp.FolderManage
 import Messages.Comp.NotificationHookManage
-import Messages.Comp.OrgManage
 import Messages.Comp.PeriodicQueryTaskManage
-import Messages.Comp.PersonManage
 import Messages.Comp.ShareManage
 import Messages.Comp.SourceManage
 import Messages.Comp.TagManage
@@ -33,9 +32,10 @@ type alias Texts =
     , periodicQueryManage : Messages.Comp.PeriodicQueryTaskManage.Texts
     , sourceManage : Messages.Comp.SourceManage.Texts
     , shareManage : Messages.Comp.ShareManage.Texts
-    , organizationManage : Messages.Comp.OrgManage.Texts
-    , personManage : Messages.Comp.PersonManage.Texts
-    , equipManage : Messages.Comp.EquipmentManage.Texts
+    , entityManage : Messages.Comp.EntityManage.Texts
+    , entityTypeManage : Messages.Comp.EntityTypeManage.Texts
+    , entities : String
+    , entityTypes : String
     , tagManage : Messages.Comp.TagManage.Texts
     , folderManage : Messages.Comp.FolderManage.Texts
     , uploadForm : Messages.Comp.UploadForm.Texts
@@ -64,9 +64,10 @@ gb tz =
     , periodicQueryManage = Messages.Comp.PeriodicQueryTaskManage.gb tz
     , sourceManage = Messages.Comp.SourceManage.gb
     , shareManage = Messages.Comp.ShareManage.gb tz
-    , organizationManage = Messages.Comp.OrgManage.gb
-    , personManage = Messages.Comp.PersonManage.gb
-    , equipManage = Messages.Comp.EquipmentManage.gb
+    , entityManage = Messages.Comp.EntityManage.gb
+    , entityTypeManage = Messages.Comp.EntityTypeManage.gb
+    , entities = "Entities"
+    , entityTypes = "Types & Roles"
     , tagManage = Messages.Comp.TagManage.gb
     , folderManage = Messages.Comp.FolderManage.gb tz
     , uploadForm = Messages.Comp.UploadForm.gb
@@ -95,9 +96,10 @@ de tz =
     , periodicQueryManage = Messages.Comp.PeriodicQueryTaskManage.de tz
     , sourceManage = Messages.Comp.SourceManage.de
     , shareManage = Messages.Comp.ShareManage.de tz
-    , organizationManage = Messages.Comp.OrgManage.de
-    , personManage = Messages.Comp.PersonManage.de
-    , equipManage = Messages.Comp.EquipmentManage.de
+    , entityManage = Messages.Comp.EntityManage.de
+    , entityTypeManage = Messages.Comp.EntityTypeManage.de
+    , entities = "Einträge"
+    , entityTypes = "Typen & Rollen"
     , tagManage = Messages.Comp.TagManage.de
     , folderManage = Messages.Comp.FolderManage.de tz
     , uploadForm = Messages.Comp.UploadForm.de
@@ -126,9 +128,10 @@ fr tz =
     , periodicQueryManage = Messages.Comp.PeriodicQueryTaskManage.fr tz
     , sourceManage = Messages.Comp.SourceManage.fr
     , shareManage = Messages.Comp.ShareManage.fr tz
-    , organizationManage = Messages.Comp.OrgManage.fr
-    , personManage = Messages.Comp.PersonManage.fr
-    , equipManage = Messages.Comp.EquipmentManage.fr
+    , entityManage = Messages.Comp.EntityManage.fr
+    , entityTypeManage = Messages.Comp.EntityTypeManage.fr
+    , entities = "Entrées"
+    , entityTypes = "Types et rôles"
     , tagManage = Messages.Comp.TagManage.fr
     , folderManage = Messages.Comp.FolderManage.fr tz
     , uploadForm = Messages.Comp.UploadForm.fr

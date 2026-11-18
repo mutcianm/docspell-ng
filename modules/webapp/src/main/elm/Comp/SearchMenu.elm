@@ -27,14 +27,10 @@ module Comp.SearchMenu exposing
     )
 
 import Api
-import Api.Model.Equipment exposing (Equipment)
-import Api.Model.EquipmentList exposing (EquipmentList)
 import Api.Model.FolderStats exposing (FolderStats)
 import Api.Model.IdName exposing (IdName)
 import Api.Model.ItemFieldValue exposing (ItemFieldValue)
 import Api.Model.ItemQuery as RQ
-import Api.Model.PersonList exposing (PersonList)
-import Api.Model.ReferenceList exposing (ReferenceList)
 import Api.Model.SearchStats exposing (SearchStats)
 import Comp.BookmarkChooser
 import Comp.CustomFieldMultiInput
@@ -50,14 +46,10 @@ import Data.Bookmarks exposing (AllBookmarks)
 import Data.CustomFieldChange exposing (CustomFieldValueCollect)
 import Data.Direction exposing (Direction)
 import Data.DropdownStyle as DS
-import Data.EquipmentOrder
-import Data.EquipmentUse
 import Data.Fields
 import Data.Flags exposing (Flags)
 import Data.ItemIds exposing (ItemIdChange, ItemIds)
 import Data.ItemQuery as Q exposing (ItemQuery)
-import Data.PersonOrder
-import Data.PersonUse
 import Data.SearchMode exposing (SearchMode)
 import Data.UiSettings exposing (UiSettings)
 import DatePicker exposing (DatePicker)
@@ -82,10 +74,6 @@ type alias Model =
     { tagSelectModel : Comp.TagSelect.Model
     , tagSelection : Comp.TagSelect.Selection
     , directionModel : Comp.Dropdown.Model Direction
-    , orgModel : Comp.Dropdown.Model IdName
-    , corrPersonModel : Comp.Dropdown.Model IdName
-    , concPersonModel : Comp.Dropdown.Model IdName
-    , concEquipmentModel : Comp.Dropdown.Model Equipment
     , roleSearch : Comp.RoleSearch.Model
     , folderList : Comp.FolderSelect.Model
     , selectedFolder : Maybe FolderStats
@@ -138,10 +126,6 @@ init flags =
             { options = Data.Direction.all
             , selected = Nothing
             }
-    , orgModel = Comp.Dropdown.makeSingle
-    , corrPersonModel = Comp.Dropdown.makeSingle
-    , concPersonModel = Comp.Dropdown.makeSingle
-    , concEquipmentModel = Comp.Dropdown.makeSingle
     , roleSearch = Comp.RoleSearch.empty
     , folderList = Comp.FolderSelect.init Nothing []
     , selectedFolder = Nothing
@@ -292,22 +276,6 @@ getItemQuery selectedItems model =
         , whenNotEmpty (model.tagSelection.excludeCats |> Set.toList)
             (\ids -> Q.Not <| Q.CatNames Q.AnyMatch ids)
         , model.selectedFolder |> Maybe.map .id |> Maybe.map (Q.FolderId Q.Eq)
-        , Comp.Dropdown.getSelected model.orgModel
-            |> List.map .id
-            |> List.head
-            |> Maybe.map (Q.CorrOrgId Q.Eq)
-        , Comp.Dropdown.getSelected model.corrPersonModel
-            |> List.map .id
-            |> List.head
-            |> Maybe.map (Q.CorrPersId Q.Eq)
-        , Comp.Dropdown.getSelected model.concPersonModel
-            |> List.map .id
-            |> List.head
-            |> Maybe.map (Q.ConcPersId Q.Eq)
-        , Comp.Dropdown.getSelected model.concEquipmentModel
-            |> List.map .id
-            |> List.head
-            |> Maybe.map (Q.ConcEquipId Q.Eq)
         , whenNotEmpty (Comp.RoleSearch.queries model.roleSearch) Q.And
         , whenNotEmpty (Data.CustomFieldChange.toFieldValues model.customValues)
             (List.map (Q.CustomFieldId Q.Like) >> Q.And)
@@ -349,10 +317,6 @@ resetModel model =
         | tagSelection = Comp.TagSelect.emptySelection
         , tagSelectModel = Comp.TagSelect.reset model.tagSelectModel
         , directionModel = emptyDropdown model.directionModel
-        , orgModel = emptyDropdown model.orgModel
-        , corrPersonModel = emptyDropdown model.corrPersonModel
-        , concPersonModel = emptyDropdown model.concPersonModel
-        , concEquipmentModel = emptyDropdown model.concEquipmentModel
         , roleSearch = Comp.RoleSearch.reset model.roleSearch
         , folderList = emptyFolder model.folderList
         , selectedFolder = Nothing
@@ -389,10 +353,6 @@ type Msg
     = Init
     | TagSelectMsg Comp.TagSelect.Msg
     | DirectionMsg (Comp.Dropdown.Msg Direction)
-    | OrgMsg (Comp.Dropdown.Msg IdName)
-    | CorrPersonMsg (Comp.Dropdown.Msg IdName)
-    | ConcPersonMsg (Comp.Dropdown.Msg IdName)
-    | ConcEquipmentMsg (Comp.Dropdown.Msg Equipment)
     | RoleSearchMsg Comp.RoleSearch.Msg
     | SetRoleEntity String String
     | FromDateMsg Comp.DatePicker.Msg
@@ -401,9 +361,6 @@ type Msg
     | UntilDueDateMsg Comp.DatePicker.Msg
     | ToggleInbox
     | ToggleSearchMode
-    | GetOrgResp (Result Http.Error ReferenceList)
-    | GetEquipResp (Result Http.Error EquipmentList)
-    | GetPersonResp (Result Http.Error PersonList)
     | SetName String
     | SetTextSearch String
     | SwapTextSearch
@@ -412,10 +369,6 @@ type Msg
     | ResetForm
     | KeyUpMsg (Maybe KeyCode)
     | FolderSelectMsg Comp.FolderSelect.Msg
-    | SetCorrOrg IdName
-    | SetCorrPerson IdName
-    | SetConcPerson IdName
-    | SetConcEquip IdName
     | SetFolder IdName
     | SetTag String
     | SetBookmark String
@@ -454,18 +407,6 @@ linkTargetMsg linkTarget =
     case linkTarget of
         Comp.LinkTarget.LinkNone ->
             Nothing
-
-        Comp.LinkTarget.LinkCorrOrg id ->
-            Just <| SetCorrOrg id
-
-        Comp.LinkTarget.LinkCorrPerson id ->
-            Just <| SetCorrPerson id
-
-        Comp.LinkTarget.LinkConcPerson id ->
-            Just <| SetConcPerson id
-
-        Comp.LinkTarget.LinkConcEquip id ->
-            Just <| SetConcEquip id
 
         Comp.LinkTarget.LinkEntity roleId id ->
             Just <| SetRoleEntity roleId id.id
@@ -563,9 +504,6 @@ updateDrop ddm flags settings msg model =
             , cmd =
                 Cmd.batch
                     [ Api.itemSearchStatsGeneral flags tagsStatsQuery GetAllTagsResp
-                    , Api.getOrgLight flags GetOrgResp
-                    , Api.getEquipments flags "" Data.EquipmentOrder.NameAsc GetEquipResp
-                    , Api.getPersons flags "" Data.PersonOrder.NameAsc GetPersonResp
                     , Cmd.map CustomFieldMsg (Comp.CustomFieldMultiInput.initCmd flags)
                     , Cmd.map RoleSearchMsg (Tuple.second (Comp.RoleSearch.init flags model.roleSearch))
                     , cdp
@@ -586,15 +524,6 @@ updateDrop ddm flags settings msg model =
             , selectionChange = Data.ItemIds.noChange
             }
 
-        SetCorrOrg id ->
-            resetAndSet (OrgMsg (Comp.Dropdown.SetSelection [ id ]))
-
-        SetCorrPerson id ->
-            resetAndSet (CorrPersonMsg (Comp.Dropdown.SetSelection [ id ]))
-
-        SetConcPerson id ->
-            resetAndSet (ConcPersonMsg (Comp.Dropdown.SetSelection [ id ]))
-
         SetFolder id ->
             case Comp.FolderSelect.setSelected id.id model.folderList of
                 Just lm ->
@@ -608,17 +537,6 @@ updateDrop ddm flags settings msg model =
                     , dragDrop = DD.DragDropData ddm Nothing
                     , selectionChange = Data.ItemIds.noChange
                     }
-
-        SetConcEquip id ->
-            let
-                equip =
-                    Equipment id.id
-                        id.name
-                        0
-                        Nothing
-                        (Data.EquipmentUse.asString Data.EquipmentUse.Concerning)
-            in
-            resetAndSet (ConcEquipmentMsg (Comp.Dropdown.SetSelection [ equip ]))
 
         SetTag id ->
             resetAndSet (TagSelectMsg (Comp.TagSelect.toggleTag id))
@@ -689,33 +607,6 @@ updateDrop ddm flags settings msg model =
                 selectModel =
                     Comp.TagSelect.initCounts tagCount catCount model.tagSelectModel
 
-                orgOpts =
-                    Comp.Dropdown.update (Comp.Dropdown.SetOptions (List.map .ref stats.corrOrgStats))
-                        model.orgModel
-                        |> Tuple.first
-
-                corrPersOpts =
-                    Comp.Dropdown.update (Comp.Dropdown.SetOptions (List.map .ref stats.corrPersStats))
-                        model.corrPersonModel
-                        |> Tuple.first
-
-                concPersOpts =
-                    Comp.Dropdown.update (Comp.Dropdown.SetOptions (List.map .ref stats.concPersStats))
-                        model.concPersonModel
-                        |> Tuple.first
-
-                concEquipOpts =
-                    let
-                        mkEquip ref =
-                            Equipment ref.id ref.name 0 Nothing ""
-                    in
-                    Comp.Dropdown.update
-                        (Comp.Dropdown.SetOptions
-                            (List.map (.ref >> mkEquip) stats.concEquipStats)
-                        )
-                        model.concEquipmentModel
-                        |> Tuple.first
-
                 fields =
                     Util.CustomField.statsToFields stats
 
@@ -732,10 +623,6 @@ updateDrop ddm flags settings msg model =
                             Comp.FolderSelect.modify model.selectedFolder
                                 model.folderList
                                 stats.folderStats
-                        , orgModel = orgOpts
-                        , corrPersonModel = corrPersOpts
-                        , concPersonModel = concPersOpts
-                        , concEquipmentModel = concEquipOpts
                         , customFieldModel = fieldOpts
                     }
             in
@@ -748,74 +635,6 @@ updateDrop ddm flags settings msg model =
             }
 
         GetStatsResp (Err _) ->
-            { model = model
-            , cmd = Cmd.none
-            , sub = Sub.none
-            , stateChange = False
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        GetEquipResp (Ok equips) ->
-            let
-                opts =
-                    Comp.Dropdown.SetOptions equips.items
-            in
-            update flags settings (ConcEquipmentMsg opts) model
-
-        GetEquipResp (Err _) ->
-            { model = model
-            , cmd = Cmd.none
-            , sub = Sub.none
-            , stateChange = False
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        GetOrgResp (Ok orgs) ->
-            let
-                opts =
-                    Comp.Dropdown.SetOptions orgs.items
-            in
-            update flags settings (OrgMsg opts) model
-
-        GetOrgResp (Err _) ->
-            { model = model
-            , cmd = Cmd.none
-            , sub = Sub.none
-            , stateChange = False
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        GetPersonResp (Ok ps) ->
-            let
-                { concerning, correspondent } =
-                    Data.PersonUse.spanPersonList ps.items
-
-                concRefs =
-                    List.map (\e -> IdName e.id e.name) concerning
-
-                corrRefs =
-                    List.map (\e -> IdName e.id e.name) correspondent
-
-                next1 =
-                    updateDrop ddm
-                        flags
-                        settings
-                        (CorrPersonMsg (Comp.Dropdown.SetOptions corrRefs))
-                        model
-
-                next2 =
-                    updateDrop next1.dragDrop.model
-                        flags
-                        settings
-                        (ConcPersonMsg (Comp.Dropdown.SetOptions concRefs))
-                        next1.model
-            in
-            next2
-
-        GetPersonResp (Err _) ->
             { model = model
             , cmd = Cmd.none
             , sub = Sub.none
@@ -876,58 +695,6 @@ updateDrop ddm flags settings msg model =
             , cmd = Cmd.none
             , sub = Sub.none
             , stateChange = True
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        OrgMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.orgModel
-            in
-            { model = { model | orgModel = m2 }
-            , cmd = Cmd.map OrgMsg c2
-            , sub = Sub.none
-            , stateChange = isDropdownChangeMsg m
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        CorrPersonMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.corrPersonModel
-            in
-            { model = { model | corrPersonModel = m2 }
-            , cmd = Cmd.map CorrPersonMsg c2
-            , sub = Sub.none
-            , stateChange = isDropdownChangeMsg m
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        ConcPersonMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.concPersonModel
-            in
-            { model = { model | concPersonModel = m2 }
-            , cmd = Cmd.map ConcPersonMsg c2
-            , sub = Sub.none
-            , stateChange = isDropdownChangeMsg m
-            , dragDrop = DD.DragDropData ddm Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        ConcEquipmentMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.concEquipmentModel
-            in
-            { model = { model | concEquipmentModel = m2 }
-            , cmd = Cmd.map ConcEquipmentMsg c2
-            , sub = Sub.none
-            , stateChange = isDropdownChangeMsg m
             , dragDrop = DD.DragDropData ddm Nothing
             , selectionChange = Data.ItemIds.noChange
             }
@@ -1532,11 +1299,6 @@ tabLook settings selectedItems model tab =
                 else
                     Comp.Tabs.Active
 
-        TabConcerning ->
-            hiddenOr [ Data.Fields.ConcPerson, Data.Fields.ConcEquip ] <|
-                activeWhenNotEmpty (Comp.Dropdown.getSelected model.concPersonModel)
-                    (Comp.Dropdown.getSelected model.concEquipmentModel)
-
         TabDate ->
             hiddenOr [ Data.Fields.Date ] <|
                 activeWhenJust (Util.Maybe.or [ model.fromDate, model.untilDate ])
@@ -1607,20 +1369,6 @@ searchTabs texts ddd flags settings selectedItems model =
                     }
             , placeholder = texts.chooseDirection
             , labelColor = \_ -> \_ -> ""
-            , style = DS.sidebarStyle
-            }
-
-        personCfg =
-            { makeOption = \e -> { text = e.name, additional = "" }
-            , placeholder = texts.choosePerson
-            , labelColor = \_ -> \_ -> ""
-            , style = DS.sidebarStyle
-            }
-
-        concEquipCfg =
-            { makeOption = \e -> { text = e.name, additional = "" }
-            , labelColor = \_ -> \_ -> ""
-            , placeholder = texts.chooseEquipment
             , style = DS.sidebarStyle
             }
     in

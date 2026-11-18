@@ -35,10 +35,6 @@ type FormChange
     | RemoveTagChange ReferenceList
     | FolderChange (Maybe IdName)
     | DirectionChange Direction
-    | OrgChange (Maybe IdName)
-    | CorrPersonChange (Maybe IdName)
-    | ConcPersonChange (Maybe IdName)
-    | EquipChange (Maybe IdName)
     | ItemDateChange (Maybe Int)
     | DueDateChange (Maybe Int)
     | NameChange String
@@ -132,34 +128,6 @@ multiUpdate flags ids change receive =
                     ItemsAndDate items date
             in
             Api.setDueDateMultiple flags data receive
-
-        OrgChange ref ->
-            let
-                data =
-                    ItemsAndRef items (Maybe.map .id ref)
-            in
-            Api.setCorrOrgMultiple flags data receive
-
-        CorrPersonChange ref ->
-            let
-                data =
-                    ItemsAndRef items (Maybe.map .id ref)
-            in
-            Api.setCorrPersonMultiple flags data receive
-
-        ConcPersonChange ref ->
-            let
-                data =
-                    ItemsAndRef items (Maybe.map .id ref)
-            in
-            Api.setConcPersonMultiple flags data receive
-
-        EquipChange ref ->
-            let
-                data =
-                    ItemsAndRef items (Maybe.map .id ref)
-            in
-            Api.setConcEquipmentMultiple flags data receive
 
         ConfirmChange flag ->
             if flag then

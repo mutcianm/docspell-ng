@@ -24,12 +24,11 @@ import Api
 import Comp.BookmarkChooser
 import Comp.DashboardManage
 import Comp.DashboardView
-import Comp.EquipmentManage
+import Comp.EntityManage
+import Comp.EntityTypeManage
 import Comp.FolderManage
 import Comp.NotificationHookManage
-import Comp.OrgManage
 import Comp.PeriodicQueryTaskManage
-import Comp.PersonManage
 import Comp.ShareManage
 import Comp.SourceManage
 import Comp.TagManage
@@ -63,9 +62,8 @@ type Msg
     | PeriodicQueryMsg Comp.PeriodicQueryTaskManage.Msg
     | SourceMsg Comp.SourceManage.Msg
     | ShareMsg Comp.ShareManage.Msg
-    | OrganizationMsg Comp.OrgManage.Msg
-    | PersonMsg Comp.PersonManage.Msg
-    | EquipmentMsg Comp.EquipmentManage.Msg
+    | EntityMsg Comp.EntityManage.Msg
+    | EntityTypeMsg Comp.EntityTypeManage.Msg
     | TagMsg Comp.TagManage.Msg
     | FolderMsg Comp.FolderManage.Msg
     | UploadMsg Comp.UploadForm.Msg
@@ -75,9 +73,8 @@ type Msg
     | InitPeriodicQuery
     | InitSource
     | InitShare
-    | InitOrganization
-    | InitPerson
-    | InitEquipment
+    | InitEntities
+    | InitEntityTypes
     | InitTags
     | InitFolder
     | InitUpload
@@ -146,9 +143,8 @@ type Content
     | PeriodicQuery Comp.PeriodicQueryTaskManage.Model
     | Source Comp.SourceManage.Model
     | Share Comp.ShareManage.Model
-    | Organization Comp.OrgManage.Model
-    | Person Comp.PersonManage.Model
-    | Equipment Comp.EquipmentManage.Model
+    | Entities Comp.EntityManage.Model
+    | EntityTypes Comp.EntityTypeManage.Model
     | Tags Comp.TagManage.Model
     | Folder Comp.FolderManage.Model
     | Upload Comp.UploadForm.Model

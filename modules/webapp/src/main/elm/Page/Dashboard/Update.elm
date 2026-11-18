@@ -12,12 +12,11 @@ import Browser.Navigation as Nav
 import Comp.BookmarkChooser
 import Comp.DashboardManage
 import Comp.DashboardView
-import Comp.EquipmentManage
+import Comp.EntityManage
+import Comp.EntityTypeManage
 import Comp.FolderManage
 import Comp.NotificationHookManage
-import Comp.OrgManage
 import Comp.PeriodicQueryTaskManage
-import Comp.PersonManage
 import Comp.ShareManage
 import Comp.SourceManage
 import Comp.TagManage
@@ -187,26 +186,19 @@ update texts settings navKey flags msg model =
             in
             ( { model | content = Share sm }, Cmd.map ShareMsg sc, Sub.none )
 
-        InitOrganization ->
-            let
-                ( om, oc ) =
-                    Comp.OrgManage.init flags
-            in
-            ( { model | content = Organization om }, Cmd.map OrganizationMsg oc, Sub.none )
-
-        InitPerson ->
-            let
-                ( pm, pc ) =
-                    Comp.PersonManage.init flags
-            in
-            ( { model | content = Person pm }, Cmd.map PersonMsg pc, Sub.none )
-
-        InitEquipment ->
+        InitEntities ->
             let
                 ( em, ec ) =
-                    Comp.EquipmentManage.init flags
+                    Comp.EntityManage.init flags
             in
-            ( { model | content = Equipment em }, Cmd.map EquipmentMsg ec, Sub.none )
+            ( { model | content = Entities em }, Cmd.map EntityMsg ec, Sub.none )
+
+        InitEntityTypes ->
+            let
+                ( tm, tc ) =
+                    Comp.EntityTypeManage.init flags
+            in
+            ( { model | content = EntityTypes tm }, Cmd.map EntityTypeMsg tc, Sub.none )
 
         InitTags ->
             let
@@ -310,38 +302,26 @@ update texts settings navKey flags msg model =
                 _ ->
                     unit model
 
-        OrganizationMsg lm ->
+        EntityMsg lm ->
             case model.content of
-                Organization m ->
-                    let
-                        ( om, oc ) =
-                            Comp.OrgManage.update flags lm m
-                    in
-                    ( { model | content = Organization om }, Cmd.map OrganizationMsg oc, Sub.none )
-
-                _ ->
-                    unit model
-
-        PersonMsg lm ->
-            case model.content of
-                Person m ->
-                    let
-                        ( pm, pc ) =
-                            Comp.PersonManage.update flags lm m
-                    in
-                    ( { model | content = Person pm }, Cmd.map PersonMsg pc, Sub.none )
-
-                _ ->
-                    unit model
-
-        EquipmentMsg lm ->
-            case model.content of
-                Equipment m ->
+                Entities m ->
                     let
                         ( em, ec ) =
-                            Comp.EquipmentManage.update flags lm m
+                            Comp.EntityManage.update flags lm m
                     in
-                    ( { model | content = Equipment em }, Cmd.map EquipmentMsg ec, Sub.none )
+                    ( { model | content = Entities em }, Cmd.map EntityMsg ec, Sub.none )
+
+                _ ->
+                    unit model
+
+        EntityTypeMsg lm ->
+            case model.content of
+                EntityTypes m ->
+                    let
+                        ( tm, tc ) =
+                            Comp.EntityTypeManage.update flags lm m
+                    in
+                    ( { model | content = EntityTypes tm }, Cmd.map EntityTypeMsg tc, Sub.none )
 
                 _ ->
                     unit model

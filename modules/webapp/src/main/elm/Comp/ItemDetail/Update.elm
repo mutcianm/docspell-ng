@@ -26,7 +26,6 @@ import Comp.DatePicker
 import Comp.DetailEdit
 import Comp.Dropdown exposing (isDropdownChangeMsg)
 import Comp.Dropzone
-import Comp.EquipmentForm
 import Comp.ItemDetail.FieldTabState as FTabState
 import Comp.ItemDetail.Model
     exposing
@@ -52,8 +51,6 @@ import Comp.ItemMail
 import Comp.KeyInput
 import Comp.LinkTarget
 import Comp.MarkdownInput
-import Comp.OrgForm
-import Comp.PersonForm
 import Comp.SentMails
 import Comp.SimpleTextInput
 import Comp.TagDropdown
@@ -61,14 +58,11 @@ import Data.AddonTrigger
 import Data.CustomFieldChange exposing (CustomFieldChange(..))
 import Data.Direction
 import Data.Environment as Env
-import Data.EquipmentOrder
 import Data.Fields exposing (Field)
 import Data.Flags exposing (Flags)
 import Data.FolderOrder
 import Data.ItemIds
 import Data.ItemNav exposing (ItemNav)
-import Data.PersonOrder
-import Data.PersonUse
 import Data.TagOrder
 import Data.UiSettings exposing (UiSettings)
 import DatePicker
@@ -218,61 +212,9 @@ update inav env msg model =
                         res1.model
 
                 res3 =
-                    update inav
-                        env
-                        (OrgDropdownMsg
-                            (Comp.Dropdown.SetSelection
-                                (item.corrOrg
-                                    |> Maybe.map List.singleton
-                                    |> Maybe.withDefault []
-                                )
-                            )
-                        )
-                        res2.model
+                    update inav env AddFilesReset res2.model
 
                 res4 =
-                    update inav
-                        env
-                        (CorrPersonMsg
-                            (Comp.Dropdown.SetSelection
-                                (item.corrPerson
-                                    |> Maybe.map List.singleton
-                                    |> Maybe.withDefault []
-                                )
-                            )
-                        )
-                        res3.model
-
-                res5 =
-                    update inav
-                        env
-                        (ConcPersonMsg
-                            (Comp.Dropdown.SetSelection
-                                (item.concPerson
-                                    |> Maybe.map List.singleton
-                                    |> Maybe.withDefault []
-                                )
-                            )
-                        )
-                        res4.model
-
-                res6 =
-                    update inav
-                        env
-                        (ConcEquipMsg
-                            (Comp.Dropdown.SetSelection
-                                (item.concEquipment
-                                    |> Maybe.map List.singleton
-                                    |> Maybe.withDefault []
-                                )
-                            )
-                        )
-                        res5.model
-
-                res7 =
-                    update inav env AddFilesReset res6.model
-
-                res8 =
                     update inav
                         env
                         (FolderDropdownMsg
@@ -283,13 +225,13 @@ update inav env msg model =
                                 )
                             )
                         )
-                        res7.model
+                        res3.model
 
-                res9 =
+                res5 =
                     update inav
                         env
                         (CustomFieldMsg (Comp.CustomFieldMultiInput.setValues item.customfields))
-                        res8.model
+                        res4.model
 
                 proposalCmd =
                     if item.state == "created" then
@@ -305,7 +247,7 @@ update inav env msg model =
                     Comp.ItemLinksEdit.init env.flags
 
                 lastModel =
-                    res9.model
+                    res5.model
             in
             { model =
                 { lastModel
@@ -334,14 +276,9 @@ update inav env msg model =
                     , res3.cmd
                     , res4.cmd
                     , res5.cmd
-                    , res6.cmd
-                    , res7.cmd
-                    , res8.cmd
-                    , res9.cmd
                     , getOptions env.flags
                     , proposalCmd
                     , Api.getSentMails env.flags item.id SentMailsResp
-                    , Api.getPersons env.flags "" Data.PersonOrder.NameAsc GetPersonResp
                     , Cmd.map CustomFieldMsg (Comp.CustomFieldMultiInput.initCmd env.flags)
                     , Cmd.map ItemLinkFormMsg ilc
                     , Cmd.map ItemLinksEditMsg lec
@@ -353,10 +290,6 @@ update inav env msg model =
                     , res3.sub
                     , res4.sub
                     , res5.sub
-                    , res6.sub
-                    , res7.sub
-                    , res8.sub
-                    , res9.sub
                     ]
             , linkTarget = Comp.LinkTarget.LinkNone
             , removedItem = Nothing
@@ -463,88 +396,6 @@ update inav env msg model =
                         Cmd.none
             in
             resultModelCmd ( newModel, Cmd.batch [ save, Cmd.map DirDropdownMsg c2 ] )
-
-        OrgDropdownMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.corrOrgModel
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                newModel =
-                    { model
-                        | corrOrgModel = m2
-                    }
-
-                save =
-                    if isDropdownChangeMsg m then
-                        setCorrOrg env.flags newModel idref
-
-                    else
-                        Cmd.none
-            in
-            resultModelCmd ( newModel, Cmd.batch [ save, Cmd.map OrgDropdownMsg c2 ] )
-
-        CorrPersonMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.corrPersonModel
-
-                newModel =
-                    { model | corrPersonModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                save =
-                    if isDropdownChangeMsg m then
-                        setCorrPerson env.flags newModel idref
-
-                    else
-                        Cmd.none
-            in
-            resultModelCmd ( newModel, Cmd.batch [ save, Cmd.map CorrPersonMsg c2 ] )
-
-        ConcPersonMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.concPersonModel
-
-                newModel =
-                    { model | concPersonModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                save =
-                    if isDropdownChangeMsg m then
-                        setConcPerson env.flags newModel idref
-
-                    else
-                        Cmd.none
-            in
-            resultModelCmd ( newModel, Cmd.batch [ save, Cmd.map ConcPersonMsg c2 ] )
-
-        ConcEquipMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.Dropdown.update m model.concEquipModel
-
-                newModel =
-                    { model | concEquipModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                save =
-                    if isDropdownChangeMsg m then
-                        setConcEquip env.flags newModel idref
-
-                    else
-                        Cmd.none
-            in
-            resultModelCmd ( newModel, Cmd.batch [ save, Cmd.map ConcEquipMsg c2 ] )
 
         SetNameMsg lm ->
             let
@@ -669,18 +520,6 @@ update inav env msg model =
                     , mobileItemMenuOpen = False
                 }
 
-        SetCorrOrgSuggestion idname ->
-            resultModelCmd ( model, setCorrOrg env.flags model (Just idname) )
-
-        SetCorrPersonSuggestion idname ->
-            resultModelCmd ( model, setCorrPerson env.flags model (Just idname) )
-
-        SetConcPersonSuggestion idname ->
-            resultModelCmd ( model, setConcPerson env.flags model (Just idname) )
-
-        SetConcEquipSuggestion idname ->
-            resultModelCmd ( model, setConcEquip env.flags model (Just idname) )
-
         SetItemDateSuggestion date ->
             resultModelCmd ( model, setDate env.flags model (Just date) )
 
@@ -716,83 +555,6 @@ update inav env msg model =
             resultModel newModel
 
         GetTagsResp (Err _) ->
-            resultModel model
-
-        GetOrgResp (Ok orgs) ->
-            let
-                opts =
-                    Comp.Dropdown.SetOptions orgs.items
-            in
-            update inav env (OrgDropdownMsg opts) model
-
-        GetOrgResp (Err _) ->
-            resultModel model
-
-        GetPersonResp (Ok ps) ->
-            let
-                { concerning, correspondent } =
-                    Data.PersonUse.spanPersonList ps.items
-
-                personDict =
-                    List.map (\p -> ( p.id, p )) ps.items
-                        |> Dict.fromList
-
-                corrOrg =
-                    Comp.Dropdown.getSelected model.corrOrgModel
-                        |> List.head
-
-                personFilter =
-                    case corrOrg of
-                        Just n ->
-                            \p -> p.organization == Just n
-
-                        Nothing ->
-                            \_ -> True
-
-                concRefs =
-                    List.map (\e -> IdName e.id e.name) concerning
-
-                corrRefs =
-                    List.filter personFilter correspondent
-                        |> List.map (\e -> IdName e.id e.name)
-
-                model_ =
-                    { model | allPersons = personDict }
-
-                res1 =
-                    update inav
-                        env
-                        (CorrPersonMsg (Comp.Dropdown.SetOptions corrRefs))
-                        model_
-
-                res2 =
-                    update inav
-                        env
-                        (ConcPersonMsg (Comp.Dropdown.SetOptions concRefs))
-                        res1.model
-            in
-            { model = res2.model
-            , cmd = Cmd.batch [ res1.cmd, res2.cmd ]
-            , sub = Sub.batch [ res1.sub, res2.sub ]
-            , linkTarget = Comp.LinkTarget.LinkNone
-            , removedItem = Nothing
-            , selectionChange = Data.ItemIds.noChange
-            }
-
-        GetPersonResp (Err _) ->
-            resultModel model
-
-        GetEquipResp (Ok equips) ->
-            let
-                opts =
-                    Comp.Dropdown.SetOptions
-                        (List.map (\e -> IdName e.id e.name)
-                            equips.items
-                        )
-            in
-            update inav env (ConcEquipMsg opts) model
-
-        GetEquipResp (Err _) ->
             resultModel model
 
         SaveResp (Ok res) ->
@@ -1244,108 +1006,6 @@ update inav env msg model =
                     | modalEdit = Just (Comp.DetailEdit.initTagByName model.item.id "" cats)
                 }
 
-        StartCorrOrgModal ->
-            resultModel
-                { model
-                    | modalEdit =
-                        Just
-                            (Comp.DetailEdit.initOrg
-                                model.item.id
-                                Comp.OrgForm.emptyModel
-                            )
-                }
-
-        StartEditCorrOrgModal ->
-            let
-                orgId =
-                    Comp.Dropdown.getSelected model.corrOrgModel
-                        |> List.head
-                        |> Maybe.map .id
-            in
-            case orgId of
-                Just oid ->
-                    let
-                        ( m, c ) =
-                            Comp.DetailEdit.editOrg env.flags oid Comp.OrgForm.emptyModel
-                    in
-                    resultModelCmd ( { model | modalEdit = Just m }, Cmd.map ModalEditMsg c )
-
-                Nothing ->
-                    resultModel model
-
-        StartEditEquipModal ->
-            let
-                equipId =
-                    Comp.Dropdown.getSelected model.concEquipModel
-                        |> List.head
-                        |> Maybe.map .id
-            in
-            case equipId of
-                Just eid ->
-                    let
-                        ( m, c ) =
-                            Comp.DetailEdit.editEquip env.flags eid Comp.EquipmentForm.emptyModel
-                    in
-                    resultModelCmd ( { model | modalEdit = Just m }, Cmd.map ModalEditMsg c )
-
-                Nothing ->
-                    resultModel model
-
-        StartCorrPersonModal ->
-            let
-                ( pm, pc ) =
-                    Comp.DetailEdit.initCorrPerson
-                        env.flags
-                        model.item.id
-                        Comp.PersonForm.emptyModel
-            in
-            resultModelCmd
-                ( { model | modalEdit = Just pm }
-                , Cmd.map ModalEditMsg pc
-                )
-
-        StartConcPersonModal ->
-            let
-                ( p, c ) =
-                    Comp.DetailEdit.initConcPerson
-                        env.flags
-                        model.item.id
-                        Comp.PersonForm.emptyModel
-            in
-            resultModelCmd
-                ( { model | modalEdit = Just p }
-                , Cmd.map ModalEditMsg c
-                )
-
-        StartEditPersonModal pm ->
-            let
-                persId =
-                    Comp.Dropdown.getSelected pm
-                        |> List.head
-                        |> Maybe.map .id
-            in
-            case persId of
-                Just pid ->
-                    let
-                        ( m, c ) =
-                            Comp.DetailEdit.editPerson env.flags pid Comp.PersonForm.emptyModel
-                    in
-                    resultModelCmd ( { model | modalEdit = Just m }, Cmd.map ModalEditMsg c )
-
-                Nothing ->
-                    resultModel model
-
-        StartEquipModal ->
-            resultModel
-                { model
-                    | modalEdit =
-                        Just
-                            (Comp.DetailEdit.initEquip
-                                model.item.id
-                                Comp.EquipmentForm.emptyModel
-                            )
-                }
-
         CloseModal ->
             resultModel { model | modalEdit = Nothing }
 
@@ -1746,9 +1406,6 @@ getOptions : Flags -> Cmd Msg
 getOptions flags =
     Cmd.batch
         [ Api.getTags flags "" Data.TagOrder.NameAsc GetTagsResp
-        , Api.getOrgLight flags GetOrgResp
-        , Api.getPersons flags "" Data.PersonOrder.NameAsc GetPersonResp
-        , Api.getEquipments flags "" Data.EquipmentOrder.NameAsc GetEquipResp
         , Api.getFolders flags "" Data.FolderOrder.NameAsc False GetFolderResp
         ]
 
@@ -1787,46 +1444,6 @@ setFolder flags model mref =
                 |> OptionalId
     in
     Api.setFolder flags model.item.id idref SaveResp
-
-
-setCorrOrg : Flags -> Model -> Maybe IdName -> Cmd Msg
-setCorrOrg flags model mref =
-    let
-        idref =
-            Maybe.map .id mref
-                |> OptionalId
-    in
-    Api.setCorrOrg flags model.item.id idref SaveResp
-
-
-setCorrPerson : Flags -> Model -> Maybe IdName -> Cmd Msg
-setCorrPerson flags model mref =
-    let
-        idref =
-            Maybe.map .id mref
-                |> OptionalId
-    in
-    Api.setCorrPerson flags model.item.id idref SaveResp
-
-
-setConcPerson : Flags -> Model -> Maybe IdName -> Cmd Msg
-setConcPerson flags model mref =
-    let
-        idref =
-            Maybe.map .id mref
-                |> OptionalId
-    in
-    Api.setConcPerson flags model.item.id idref SaveResp
-
-
-setConcEquip : Flags -> Model -> Maybe IdName -> Cmd Msg
-setConcEquip flags model mref =
-    let
-        idref =
-            Maybe.map .id mref
-                |> OptionalId
-    in
-    Api.setConcEquip flags model.item.id idref SaveResp
 
 
 setName : Flags -> Model -> Cmd Msg
@@ -1881,16 +1498,16 @@ resetField flags item tagger field =
             Api.setFolder flags item Api.Model.OptionalId.empty (tagger Data.Fields.Folder)
 
         Data.Fields.CorrOrg ->
-            Api.setCorrOrg flags item Api.Model.OptionalId.empty (tagger Data.Fields.CorrOrg)
+            Cmd.none
 
         Data.Fields.CorrPerson ->
-            Api.setCorrPerson flags item Api.Model.OptionalId.empty (tagger Data.Fields.CorrPerson)
+            Cmd.none
 
         Data.Fields.ConcPerson ->
-            Api.setConcPerson flags item Api.Model.OptionalId.empty (tagger Data.Fields.ConcPerson)
+            Cmd.none
 
         Data.Fields.ConcEquip ->
-            Api.setConcEquip flags item Api.Model.OptionalId.empty (tagger Data.Fields.ConcEquip)
+            Cmd.none
 
         Data.Fields.Date ->
             Api.setItemDate flags item Api.Model.OptionalDate.empty (tagger Data.Fields.Date)

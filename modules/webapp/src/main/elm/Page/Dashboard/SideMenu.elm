@@ -67,9 +67,8 @@ view texts versionInfo _ model =
             [ text texts.manage
             ]
         , div [ class "ml-2 mb-2" ]
-            [ menuLink [ onClick InitOrganization, href "#" ] (Icons.organizationIcon "") texts.basics.organization
-            , menuLink [ onClick InitPerson, href "#" ] (Icons.personIcon "") texts.basics.person
-            , menuLink [ onClick InitEquipment, href "#" ] (Icons.equipmentIcon "") texts.basics.equipment
+            [ menuLink [ onClick InitEntities, href "#" ] (Icons.organizationIcon "") texts.entities
+            , menuLink [ onClick InitEntityTypes, href "#" ] (i [ class "fa fa-shapes" ] []) texts.entityTypes
             , menuLink [ onClick InitTags, href "#" ] (Icons.tagsIcon "") texts.basics.tags
             , menuLink [ onClick InitFolder, href "#" ] (Icons.folderIcon "") texts.basics.folder
             ]

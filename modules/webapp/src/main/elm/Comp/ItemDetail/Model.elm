@@ -22,7 +22,6 @@ module Comp.ItemDetail.Model exposing
     , isEditNotes
     , isShowQrAttach
     , isShowQrItem
-    , personMatchesOrg
     , resultModel
     , resultModelCmd
     , resultModelCmdSub
@@ -32,15 +31,11 @@ import Api.Model.AddonRunConfig exposing (AddonRunConfig)
 import Api.Model.AddonRunConfigList exposing (AddonRunConfigList)
 import Api.Model.BasicResult exposing (BasicResult)
 import Api.Model.CustomField exposing (CustomField)
-import Api.Model.EquipmentList exposing (EquipmentList)
 import Api.Model.FolderItem exposing (FolderItem)
 import Api.Model.FolderList exposing (FolderList)
 import Api.Model.IdName exposing (IdName)
 import Api.Model.ItemDetail exposing (ItemDetail)
 import Api.Model.ItemProposals exposing (ItemProposals)
-import Api.Model.Person exposing (Person)
-import Api.Model.PersonList exposing (PersonList)
-import Api.Model.ReferenceList exposing (ReferenceList)
 import Api.Model.SentMails exposing (SentMails)
 import Api.Model.Tag exposing (Tag)
 import Api.Model.TagList exposing (TagList)
@@ -81,10 +76,6 @@ type alias Model =
     , menuOpen : Bool
     , tagModel : Comp.TagDropdown.Model
     , directionModel : Comp.Dropdown.Model Direction
-    , corrOrgModel : Comp.Dropdown.Model IdName
-    , corrPersonModel : Comp.Dropdown.Model IdName
-    , concPersonModel : Comp.Dropdown.Model IdName
-    , concEquipModel : Comp.Dropdown.Model IdName
     , folderModel : Comp.Dropdown.Model IdName
     , allFolders : List FolderItem
     , nameModel : String
@@ -120,7 +111,6 @@ type alias Model =
     , customFieldsModel : Comp.CustomFieldMultiInput.Model
     , customFieldSavingIcon : Dict String String
     , allTags : List Tag
-    , allPersons : Dict String Person
     , attachmentDropdownOpen : Bool
     , mobileItemMenuOpen : Bool
     , editMenuTabsOpen : Set String
@@ -222,10 +212,6 @@ emptyModel =
             { options = Data.Direction.all
             , selected = Nothing
             }
-    , corrOrgModel = Comp.Dropdown.makeSingle
-    , corrPersonModel = Comp.Dropdown.makeSingle
-    , concPersonModel = Comp.Dropdown.makeSingle
-    , concEquipModel = Comp.Dropdown.makeSingle
     , folderModel = Comp.Dropdown.makeSingle
     , allFolders = []
     , nameInput = Comp.SimpleTextInput.initDefault Nothing
@@ -261,7 +247,6 @@ emptyModel =
     , customFieldsModel = Comp.CustomFieldMultiInput.initWith []
     , customFieldSavingIcon = Dict.empty
     , allTags = []
-    , allPersons = Dict.empty
     , attachmentDropdownOpen = False
     , mobileItemMenuOpen = False
     , editMenuTabsOpen = Set.empty
@@ -291,24 +276,13 @@ type Msg
     | ToggleAttachment String
     | TagDropdownMsg Comp.TagDropdown.Msg
     | DirDropdownMsg (Comp.Dropdown.Msg Direction)
-    | OrgDropdownMsg (Comp.Dropdown.Msg IdName)
-    | CorrPersonMsg (Comp.Dropdown.Msg IdName)
-    | ConcPersonMsg (Comp.Dropdown.Msg IdName)
-    | ConcEquipMsg (Comp.Dropdown.Msg IdName)
     | GetTagsResp (Result Http.Error TagList)
-    | GetOrgResp (Result Http.Error ReferenceList)
-    | GetPersonResp (Result Http.Error PersonList)
-    | GetEquipResp (Result Http.Error EquipmentList)
     | SetNotes String
     | ToggleEditNotes
     | NotesEditMsg Comp.MarkdownInput.Msg
     | SaveNotes
     | ConfirmItem
     | UnconfirmItem
-    | SetCorrOrgSuggestion IdName
-    | SetCorrPersonSuggestion IdName
-    | SetConcPersonSuggestion IdName
-    | SetConcEquipSuggestion IdName
     | SetItemDateSuggestion Int
     | SetDueDateSuggestion Int
     | ItemDatePickerMsg Comp.DatePicker.Msg
@@ -345,10 +319,6 @@ type Msg
     | AttachDDMsg (DD.Msg String String)
     | ModalEditMsg Comp.DetailEdit.Msg
     | StartTagModal
-    | StartCorrOrgModal
-    | StartCorrPersonModal
-    | StartConcPersonModal
-    | StartEquipModal
     | CloseModal
     | EditAttachNameStart String
     | EditAttachNameCancel
@@ -357,9 +327,6 @@ type Msg
     | EditAttachNameResp (Result Http.Error BasicResult)
     | GetFolderResp (Result Http.Error FolderList)
     | FolderDropdownMsg (Comp.Dropdown.Msg IdName)
-    | StartEditCorrOrgModal
-    | StartEditPersonModal (Comp.Dropdown.Model IdName)
-    | StartEditEquipModal
     | ResetHiddenMsg Field (Result Http.Error BasicResult)
     | SaveNameResp (Result Http.Error BasicResult)
     | KeyInputMsg Comp.KeyInput.Msg
@@ -425,21 +392,3 @@ resultModelCmdSub : ( Model, Cmd Msg, Sub Msg ) -> UpdateResult
 resultModelCmdSub ( model, cmd, sub ) =
     UpdateResult model cmd sub Comp.LinkTarget.LinkNone Nothing Data.ItemIds.noChange
 
-
-personMatchesOrg : Model -> Bool
-personMatchesOrg model =
-    let
-        org =
-            Comp.Dropdown.getSelected model.corrOrgModel
-                |> List.head
-
-        pers =
-            Comp.Dropdown.getSelected model.corrPersonModel
-                |> List.head
-
-        persOrg =
-            pers
-                |> Maybe.andThen (\idref -> Dict.get idref.id model.allPersons)
-                |> Maybe.andThen .organization
-    in
-    org == Nothing || pers == Nothing || org == persOrg

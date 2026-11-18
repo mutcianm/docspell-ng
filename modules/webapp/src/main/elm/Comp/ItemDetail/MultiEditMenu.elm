@@ -17,11 +17,9 @@ module Comp.ItemDetail.MultiEditMenu exposing
     )
 
 import Api
-import Api.Model.EquipmentList exposing (EquipmentList)
 import Api.Model.FolderItem exposing (FolderItem)
 import Api.Model.FolderList exposing (FolderList)
 import Api.Model.IdName exposing (IdName)
-import Api.Model.PersonList exposing (PersonList)
 import Api.Model.ReferenceList exposing (ReferenceList)
 import Comp.CustomFieldMultiInput
 import Comp.DatePicker
@@ -36,13 +34,10 @@ import Comp.TagDropdown
 import Data.CustomFieldChange exposing (CustomFieldChange(..))
 import Data.Direction exposing (Direction)
 import Data.DropdownStyle
-import Data.EquipmentOrder
 import Data.Fields
 import Data.Flags exposing (Flags)
 import Data.FolderOrder
 import Data.Icons as Icons
-import Data.PersonOrder
-import Data.PersonUse
 import Data.UiSettings exposing (UiSettings)
 import DatePicker exposing (DatePicker)
 import Html exposing (..)
@@ -84,10 +79,6 @@ type alias Model =
     , itemDate : Maybe Int
     , dueDate : Maybe Int
     , dueDatePicker : DatePicker
-    , corrOrgModel : Comp.Dropdown.Model IdName
-    , corrPersonModel : Comp.Dropdown.Model IdName
-    , concPersonModel : Comp.Dropdown.Model IdName
-    , concEquipModel : Comp.Dropdown.Model IdName
     , modalEdit : Maybe Comp.DetailEdit.Model
     , tagEditMode : TagEditMode
     , customFieldModel : Comp.CustomFieldMultiInput.Model
@@ -107,14 +98,7 @@ type Msg
     | FolderDropdownMsg (Comp.Dropdown.Msg IdName)
     | TagDropdownMsg Comp.TagDropdown.Msg
     | DirDropdownMsg (Comp.Dropdown.Msg Direction)
-    | OrgDropdownMsg (Comp.Dropdown.Msg IdName)
-    | CorrPersonMsg (Comp.Dropdown.Msg IdName)
-    | ConcPersonMsg (Comp.Dropdown.Msg IdName)
-    | ConcEquipMsg (Comp.Dropdown.Msg IdName)
     | ItemLinksMultiMsg Comp.ItemLinksMulti.Msg
-    | GetOrgResp (Result Http.Error ReferenceList)
-    | GetPersonResp (Result Http.Error PersonList)
-    | GetEquipResp (Result Http.Error EquipmentList)
     | GetFolderResp (Result Http.Error FolderList)
     | CustomFieldMsg Comp.CustomFieldMultiInput.Msg
     | ToggleAkkordionTab String
@@ -128,10 +112,6 @@ init =
             { options = Data.Direction.all
             , selected = Nothing
             }
-    , corrOrgModel = Comp.Dropdown.makeSingle
-    , corrPersonModel = Comp.Dropdown.makeSingle
-    , concPersonModel = Comp.Dropdown.makeSingle
-    , concEquipModel = Comp.Dropdown.makeSingle
     , folderModel = Comp.Dropdown.makeSingle
     , allFolders = []
     , nameInput = Comp.SimpleTextInput.initDefault Nothing
@@ -157,10 +137,7 @@ loadModel flags =
             Comp.TagDropdown.init flags
     in
     Cmd.batch
-        [ Api.getOrgLight flags GetOrgResp
-        , Api.getPersons flags "" Data.PersonOrder.NameAsc GetPersonResp
-        , Api.getEquipments flags "" Data.EquipmentOrder.NameAsc GetEquipResp
-        , Api.getFolders flags "" Data.FolderOrder.NameAsc False GetFolderResp
+        [ Api.getFolders flags "" Data.FolderOrder.NameAsc False GetFolderResp
         , Cmd.map CustomFieldMsg (Comp.CustomFieldMultiInput.initCmd flags)
         , Cmd.map ItemDatePickerMsg dpc
         , Cmd.map DueDatePickerMsg dpc
@@ -322,98 +299,6 @@ update flags msg model =
             in
             resultNoCmd change newModel
 
-        OrgDropdownMsg m ->
-            let
-                ( m2, _ ) =
-                    Comp.Dropdown.update m model.corrOrgModel
-
-                newModel =
-                    { model | corrOrgModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                change =
-                    if isDropdownChangeMsg m then
-                        OrgChange idref
-
-                    else
-                        NoFormChange
-            in
-            resultNoCmd change newModel
-
-        GetOrgResp (Ok orgs) ->
-            let
-                opts =
-                    Comp.Dropdown.SetOptions orgs.items
-            in
-            update flags (OrgDropdownMsg opts) model
-
-        GetOrgResp (Err _) ->
-            resultNone model
-
-        CorrPersonMsg m ->
-            let
-                ( m2, _ ) =
-                    Comp.Dropdown.update m model.corrPersonModel
-
-                newModel =
-                    { model | corrPersonModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                change =
-                    if isDropdownChangeMsg m then
-                        CorrPersonChange idref
-
-                    else
-                        NoFormChange
-            in
-            resultNoCmd change newModel
-
-        ConcPersonMsg m ->
-            let
-                ( m2, _ ) =
-                    Comp.Dropdown.update m model.concPersonModel
-
-                newModel =
-                    { model | concPersonModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                change =
-                    if isDropdownChangeMsg m then
-                        ConcPersonChange idref
-
-                    else
-                        NoFormChange
-            in
-            resultNoCmd change newModel
-
-        GetPersonResp (Ok ps) ->
-            let
-                { concerning, correspondent } =
-                    Data.PersonUse.spanPersonList ps.items
-
-                concRefs =
-                    List.map (\e -> IdName e.id e.name) concerning
-
-                corrRefs =
-                    List.map (\e -> IdName e.id e.name) correspondent
-
-                res1 =
-                    update flags (CorrPersonMsg (Comp.Dropdown.SetOptions corrRefs)) model
-
-                res2 =
-                    update flags (ConcPersonMsg (Comp.Dropdown.SetOptions concRefs)) res1.model
-            in
-            res2
-
-        GetPersonResp (Err _) ->
-            resultNone model
-
         ItemLinksMultiMsg lm ->
             let
                 ( lmm, lmc, change ) =
@@ -429,39 +314,6 @@ update flags msg model =
                     Nothing ->
                         NoFormChange
                 )
-
-        ConcEquipMsg m ->
-            let
-                ( m2, _ ) =
-                    Comp.Dropdown.update m model.concEquipModel
-
-                newModel =
-                    { model | concEquipModel = m2 }
-
-                idref =
-                    Comp.Dropdown.getSelected m2 |> List.head
-
-                change =
-                    if isDropdownChangeMsg m then
-                        EquipChange idref
-
-                    else
-                        NoFormChange
-            in
-            resultNoCmd change newModel
-
-        GetEquipResp (Ok equips) ->
-            let
-                opts =
-                    Comp.Dropdown.SetOptions
-                        (List.map (\e -> IdName e.id e.name)
-                            equips.items
-                        )
-            in
-            update flags (ConcEquipMsg opts) model
-
-        GetEquipResp (Err _) ->
-            resultNone model
 
         ItemDatePickerMsg m ->
             let

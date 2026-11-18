@@ -7,8 +7,6 @@
 
 module Comp.LinkTarget exposing
     ( LinkTarget(..)
-    , makeConcLink
-    , makeCorrLink
     , makeRoleLinks
     , makeCustomFieldLink
     , makeCustomFieldLink2
@@ -30,11 +28,7 @@ import Util.CustomField
 
 
 type LinkTarget
-    = LinkCorrOrg IdName
-    | LinkCorrPerson IdName
-    | LinkConcPerson IdName
-    | LinkConcEquip IdName
-    | LinkEntity String IdName
+    = LinkEntity String IdName
     | LinkFolder IdName
     | LinkTag IdName
     | LinkCustomField ItemFieldValue
@@ -42,38 +36,6 @@ type LinkTarget
     | LinkBookmark String
     | LinkRelatedItems (List String)
     | LinkNone
-
-
-makeCorrLink :
-    { a | corrOrg : Maybe IdName, corrPerson : Maybe IdName }
-    -> List ( String, Bool )
-    -> (LinkTarget -> msg)
-    -> List (Html msg)
-makeCorrLink item linkClasses tagger =
-    let
-        makeOrg idname =
-            makeLink linkClasses (LinkCorrOrg >> tagger) idname
-
-        makePerson idname =
-            makeLink linkClasses (LinkCorrPerson >> tagger) idname
-    in
-    combine (Maybe.map makeOrg item.corrOrg) (Maybe.map makePerson item.corrPerson)
-
-
-makeConcLink :
-    { a | concPerson : Maybe IdName, concEquipment : Maybe IdName }
-    -> List ( String, Bool )
-    -> (LinkTarget -> msg)
-    -> List (Html msg)
-makeConcLink item linkClasses tagger =
-    let
-        makePerson idname =
-            makeLink linkClasses (LinkConcPerson >> tagger) idname
-
-        makeEquip idname =
-            makeLink linkClasses (LinkConcEquip >> tagger) idname
-    in
-    combine (Maybe.map makePerson item.concPerson) (Maybe.map makeEquip item.concEquipment)
 
 
 {-| One line per role with links, e.g. "From: Acme" or "Concerning: Jane, Van". The label
@@ -183,22 +145,6 @@ makeSourceLink classes tagger str =
 
 
 --- Helpers
-
-
-combine : Maybe (Html msg) -> Maybe (Html msg) -> List (Html msg)
-combine ma mb =
-    case ( ma, mb ) of
-        ( Just a, Just b ) ->
-            [ a, text ", ", b ]
-
-        ( Just a, Nothing ) ->
-            [ a ]
-
-        ( Nothing, Just b ) ->
-            [ b ]
-
-        ( Nothing, Nothing ) ->
-            [ text "-" ]
 
 
 makeLink : List ( String, Bool ) -> (IdName -> msg) -> IdName -> Html msg
