@@ -31,10 +31,11 @@ import doobie.{Query => _, _}
 object QItem extends FtsSupport {
   private[this] val logger = docspell.logging.getLogger[ConnectionIO]
 
-  private val equip = REquipment.as("e")
-  private val org = ROrganization.as("o")
-  private val pers0 = RPerson.as("pers0")
-  private val pers1 = RPerson.as("pers1")
+  // the item's corr/conc columns are kept in sync with its links (QEntity.refreshItemColumns)
+  private val equip = REntity.as("e")
+  private val org = REntity.as("o")
+  private val pers0 = REntity.as("pers0")
+  private val pers1 = REntity.as("pers1")
   private val f = RFolder.as("f")
   private val i = RItem.as("i")
   private val cf = RCustomField.as("cf")
@@ -76,14 +77,20 @@ object QItem extends FtsSupport {
   def findItem(id: Ident, collective: CollectiveId): ConnectionIO[Option[ItemData]] = {
     val cq =
       Select(
-        select(i.all, org.all, pers0.all, pers1.all, equip.all)
+        select(
+          i.all,
+          Nel.of(org.id, org.name),
+          Nel.of(pers0.id, pers0.name),
+          Nel.of(pers1.id, pers1.name),
+          Nel.of(equip.id, equip.name)
+        )
           .append(f.id.s)
           .append(f.name.s),
         from(i)
-          .leftJoin(org, org.oid === i.corrOrg)
-          .leftJoin(pers0, pers0.pid === i.corrPerson)
-          .leftJoin(pers1, pers1.pid === i.concPerson)
-          .leftJoin(equip, equip.eid === i.concEquipment)
+          .leftJoin(org, org.id === i.corrOrg)
+          .leftJoin(pers0, pers0.id === i.corrPerson)
+          .leftJoin(pers1, pers1.id === i.concPerson)
+          .leftJoin(equip, equip.id === i.concEquipment)
           .leftJoin(f, f.id === i.folder),
         i.id === id
       ).build
@@ -92,10 +99,10 @@ object QItem extends FtsSupport {
       .query[
         (
             RItem,
-            Option[ROrganization],
-            Option[RPerson],
-            Option[RPerson],
-            Option[REquipment],
+            Option[IdRef],
+            Option[IdRef],
+            Option[IdRef],
+            Option[IdRef],
             Option[IdRef]
         )
       ]
@@ -177,13 +184,13 @@ object QItem extends FtsSupport {
         i.source.s,
         i.incoming.s,
         i.created.s,
-        org.oid.s,
+        org.id.s,
         org.name.s,
-        pers0.pid.s,
+        pers0.id.s,
         pers0.name.s,
-        pers1.pid.s,
+        pers1.id.s,
         pers1.name.s,
-        equip.eid.s,
+        equip.id.s,
         equip.name.s,
         f.id.s,
         f.name.s,
@@ -195,10 +202,10 @@ object QItem extends FtsSupport {
       ),
       from(i)
         .leftJoin(f, f.id === i.folder && f.collective === coll)
-        .leftJoin(pers0, pers0.pid === i.corrPerson && pers0.cid === coll)
-        .leftJoin(org, org.oid === i.corrOrg && org.cid === coll)
-        .leftJoin(pers1, pers1.pid === i.concPerson && pers1.cid === coll)
-        .leftJoin(equip, equip.eid === i.concEquipment && equip.cid === coll),
+        .leftJoin(pers0, pers0.id === i.corrPerson && pers0.cid === coll)
+        .leftJoin(org, org.id === i.corrOrg && org.cid === coll)
+        .leftJoin(pers1, pers1.id === i.concPerson && pers1.cid === coll)
+        .leftJoin(equip, equip.id === i.concEquipment && equip.cid === coll),
       where(
         i.cid === coll &&? q.query.map(qs => queryCondFromExpr(today, coll, qs))
           && or(
@@ -275,13 +282,13 @@ object QItem extends FtsSupport {
             i.source.s,
             i.incoming.s,
             i.created.s,
-            org.oid.s,
+            org.id.s,
             org.name.s,
-            pers0.pid.s,
+            pers0.id.s,
             pers0.name.s,
-            pers1.pid.s,
+            pers1.id.s,
             pers1.name.s,
-            equip.eid.s,
+            equip.id.s,
             equip.name.s,
             f.id.s,
             f.name.s
@@ -622,22 +629,22 @@ object QItem extends FtsSupport {
   def searchCorrOrgSummary(today: LocalDate, ftsTable: Option[RFtsResult.Table])(
       q: Query
   ): ConnectionIO[List[IdRefCount]] =
-    searchIdRefSummary(org.oid, org.name, i.corrOrg, today, ftsTable)(q)
+    searchIdRefSummary(org.id, org.name, i.corrOrg, today, ftsTable)(q)
 
   def searchCorrPersonSummary(today: LocalDate, ftsTable: Option[RFtsResult.Table])(
       q: Query
   ): ConnectionIO[List[IdRefCount]] =
-    searchIdRefSummary(pers0.pid, pers0.name, i.corrPerson, today, ftsTable)(q)
+    searchIdRefSummary(pers0.id, pers0.name, i.corrPerson, today, ftsTable)(q)
 
   def searchConcPersonSummary(today: LocalDate, ftsTable: Option[RFtsResult.Table])(
       q: Query
   ): ConnectionIO[List[IdRefCount]] =
-    searchIdRefSummary(pers1.pid, pers1.name, i.concPerson, today, ftsTable)(q)
+    searchIdRefSummary(pers1.id, pers1.name, i.concPerson, today, ftsTable)(q)
 
   def searchConcEquipSummary(today: LocalDate, ftsTable: Option[RFtsResult.Table])(
       q: Query
   ): ConnectionIO[List[IdRefCount]] =
-    searchIdRefSummary(equip.eid, equip.name, i.concEquipment, today, ftsTable)(q)
+    searchIdRefSummary(equip.id, equip.name, i.concEquipment, today, ftsTable)(q)
 
   private def searchIdRefSummary(
       idCol: Column[Ident],
@@ -740,8 +747,9 @@ object QItem extends FtsSupport {
       mn <- store.transact(RSentMail.deleteByItem(itemId))
       cf <- store.transact(RCustomFieldValue.deleteByItem(itemId))
       im <- store.transact(RItemProposal.deleteByItem(itemId))
+      ie <- store.transact(RItemEntity.deleteByItem(itemId))
       n <- store.transact(RItem.deleteByIdAndCollective(itemId, collective))
-    } yield tn + rn + n + mn + cf + im
+    } yield tn + rn + n + mn + cf + im + ie
 
   private def findByFileIdsQuery(
       fileMetaIds: Nel[FileKey],

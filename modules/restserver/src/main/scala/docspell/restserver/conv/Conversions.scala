@@ -136,10 +136,10 @@ trait Conversions {
       data.item.created,
       data.item.updated,
       data.item.itemDate,
-      data.corrOrg.map(o => IdName(o.oid, o.name)),
-      data.corrPerson.map(p => IdName(p.pid, p.name)),
-      data.concPerson.map(p => IdName(p.pid, p.name)),
-      data.concEquip.map(e => IdName(e.eid, e.name)),
+      data.corrOrg.map(mkIdName),
+      data.corrPerson.map(mkIdName),
+      data.concPerson.map(mkIdName),
+      data.concEquip.map(mkIdName),
       data.folder.map(mkIdName),
       data.item.dueDate,
       data.item.notes,
@@ -153,7 +153,14 @@ trait Conversions {
     )
 
   def mkItemLink(l: QEntity.ItemLink): ItemLink =
-    ItemLink(l.role.id, l.role.name, l.entity.id, l.entity.name, l.entity.typeId, l.role.label)
+    ItemLink(
+      l.role.id,
+      l.role.name,
+      l.entity.id,
+      l.entity.name,
+      l.entity.typeId,
+      l.role.label
+    )
 
   def mkItemFieldValue(v: QItemFieldValue): ItemFieldValue =
     ItemFieldValue(v.fieldId, v.fieldName, v.fieldLabel, v.fieldType, v.value)

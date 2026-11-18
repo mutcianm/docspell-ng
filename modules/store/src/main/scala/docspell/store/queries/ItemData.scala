@@ -11,10 +11,10 @@ import docspell.store.records._
 
 case class ItemData(
     item: RItem,
-    corrOrg: Option[ROrganization],
-    corrPerson: Option[RPerson],
-    concPerson: Option[RPerson],
-    concEquip: Option[REquipment],
+    corrOrg: Option[IdRef],
+    corrPerson: Option[IdRef],
+    concPerson: Option[IdRef],
+    concEquip: Option[IdRef],
     folder: Option[IdRef],
     tags: Vector[RTag],
     attachments: Vector[(RAttachment, RFileMeta)],

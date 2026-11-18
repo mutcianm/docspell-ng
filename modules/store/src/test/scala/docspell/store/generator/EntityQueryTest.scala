@@ -28,10 +28,10 @@ class EntityQueryTest extends DatabaseTest {
 
   private val tables = Tables(
     RItem.as("i"),
-    ROrganization.as("co"),
-    RPerson.as("cp"),
-    RPerson.as("np"),
-    REquipment.as("ne"),
+    REntity.as("co"),
+    REntity.as("cp"),
+    REntity.as("np"),
+    REntity.as("ne"),
     RFolder.as("f"),
     RAttachment.as("a"),
     RAttachmentMeta.as("m")

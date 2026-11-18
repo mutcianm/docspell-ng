@@ -259,13 +259,13 @@ object ItemQueryGenerator {
       case Attr.ItemName                 => tables.item.name
       case Attr.ItemSource               => tables.item.source
       case Attr.ItemNotes                => tables.item.notes
-      case Attr.Correspondent.OrgId      => tables.corrOrg.oid.cast[String]
+      case Attr.Correspondent.OrgId      => tables.corrOrg.id.cast[String]
       case Attr.Correspondent.OrgName    => tables.corrOrg.name
-      case Attr.Correspondent.PersonId   => tables.corrPers.pid.cast[String]
+      case Attr.Correspondent.PersonId   => tables.corrPers.id.cast[String]
       case Attr.Correspondent.PersonName => tables.corrPers.name
-      case Attr.Concerning.PersonId      => tables.concPers.pid.cast[String]
+      case Attr.Concerning.PersonId      => tables.concPers.id.cast[String]
       case Attr.Concerning.PersonName    => tables.concPers.name
-      case Attr.Concerning.EquipId       => tables.concEquip.eid.cast[String]
+      case Attr.Concerning.EquipId       => tables.concEquip.id.cast[String]
       case Attr.Concerning.EquipName     => tables.concEquip.name
       case Attr.Folder.FolderId          => tables.folder.id.cast[String]
       case Attr.Folder.FolderName        => tables.folder.name

@@ -10,10 +10,10 @@ import docspell.store.records._
 
 final case class Tables(
     item: RItem.Table,
-    corrOrg: ROrganization.Table,
-    corrPers: RPerson.Table,
-    concPers: RPerson.Table,
-    concEquip: REquipment.Table,
+    corrOrg: REntity.Table,
+    corrPers: REntity.Table,
+    concPers: REntity.Table,
+    concEquip: REntity.Table,
     folder: RFolder.Table,
     attach: RAttachment.Table,
     meta: RAttachmentMeta.Table
