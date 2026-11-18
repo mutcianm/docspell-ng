@@ -475,9 +475,11 @@ getUiLanguage flags settings default =
             default
 
 
+{-| The documentation bundled into the restserver (#32), matching this version.
+-}
 documentationSite : String
 documentationSite =
-    "https://docspell.org/docs"
+    "/docs/"
 
 
 

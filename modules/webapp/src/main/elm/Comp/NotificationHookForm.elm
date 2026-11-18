@@ -268,7 +268,7 @@ view texts settings model =
                 , a
                     [ class "float-right"
                     , class S.link
-                    , href "https://docspell.org/docs/jsonminiquery/"
+                    , href "/docs/jsonminiquery/"
                     , target "_blank"
                     ]
                     [ i [ class "fa fa-question" ] []

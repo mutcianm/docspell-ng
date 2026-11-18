@@ -42,7 +42,7 @@ view texts flags model =
                     ]
                     [ text "Use an "
                     , a
-                        [ href "https://docspell.org/docs/query/#structure"
+                        [ href "/docs/query/#structure"
                         , target "_new"
                         , class S.link
                         , class "mx-1"

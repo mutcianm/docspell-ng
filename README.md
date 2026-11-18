@@ -116,10 +116,13 @@ Persons, organizations and equipment are replaced by one generic entity model
 - **Mailbox scanning** no longer guesses the direction from the sender's
   address. Mails are incoming unless the scan task sets a direction.
 
-### Images
+### Images and documentation
 
 The fork builds its own Docker images from this repository; see
-[docker/README.md](docker/README.md).
+[docker/README.md](docker/README.md). The restserver in these images
+serves this repository's documentation at `/docs`, so the docs match
+the running version; the webapp's help links point there
+([#32](https://github.com/mutcianm/docspell-ng/issues/32)).
 
 
 ## Impressions
