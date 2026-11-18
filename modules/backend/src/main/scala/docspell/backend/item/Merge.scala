@@ -16,7 +16,7 @@ import docspell.backend.ops.OItem
 import docspell.common._
 import docspell.logging.Logger
 import docspell.store.Store
-import docspell.store.queries.QCustomField
+import docspell.store.queries.{QCustomField, QEntity}
 import docspell.store.queries.QCustomField.FieldValue
 import docspell.store.records._
 
@@ -51,6 +51,7 @@ object Merge {
           target = moveMainData(items)
           _ <- EitherT.right[Error](store.transact(RItem.updateAll(target)))
           _ <- EitherT.right[Error](moveTags(ids))
+          _ <- EitherT.right[Error](moveLinks(ids, collective))
           _ <- EitherT.right[Error](moveCustomFields(ids))
           _ <- EitherT.right[Error](moveAttachments(ids))
           _ <- EitherT.right[Error](moveSentMails(ids))
@@ -91,6 +92,12 @@ object Merge {
           }
         } yield n.sum
       }
+
+      // corr/conc columns follow from the links, so links move instead of columns
+      def moveLinks(items: NonEmptyList[Ident], coll: CollectiveId): F[Int] =
+        items.tail
+          .traverse(id => store.transact(QEntity.copyLinks(id, items.head, coll)))
+          .map(_.sum)
 
       def moveTags(items: NonEmptyList[Ident]): F[Int] = {
         val target = items.head
@@ -166,9 +173,6 @@ object Merge {
     MoveProp
       .all(
         MoveProp.whenNotExists(_.itemDate)((i, v) => i.copy(itemDate = v)),
-        MoveProp.whenNotExists(_.corrPerson)((i, v) => i.copy(corrPerson = v)),
-        MoveProp.whenNotExists(_.concPerson)((i, v) => i.copy(concPerson = v)),
-        MoveProp.whenNotExists(_.concEquipment)((i, v) => i.copy(concEquipment = v)),
         MoveProp.whenNotExists(_.dueDate)((i, v) => i.copy(dueDate = v)),
         MoveProp.whenNotExists(_.folderId)((i, v) => i.copy(folderId = v)),
         MoveProp.concat(_.notes)((i, v) => i.copy(notes = v))
