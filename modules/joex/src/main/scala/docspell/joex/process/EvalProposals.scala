@@ -13,50 +13,30 @@ import cats.implicits._
 
 import docspell.common._
 import docspell.scheduler.Task
-import docspell.store.Store
-import docspell.store.records.{RAttachmentMeta, RPerson}
+import docspell.store.records.RAttachmentMeta
 
 /** Calculate weights for candidates that adds the most likely candidate a lower number. */
 object EvalProposals {
 
-  def apply[F[_]: Sync](
-      store: Store[F]
-  )(data: ItemData): Task[F, ProcessItemArgs, ItemData] =
+  def apply[F[_]: Sync](data: ItemData): Task[F, ProcessItemArgs, ItemData] =
     Task { _ =>
       for {
         now <- Timestamp.current[F]
-        personRefs <- findOrganizationRelation[F](data, store)
-        metas = data.metas.map(calcCandidateWeight(now.toUtcDate, personRefs))
+        metas = data.metas.map(calcCandidateWeight(now.toUtcDate))
       } yield data.copy(metas = metas)
     }
 
-  def findOrganizationRelation[F[_]: Sync](
-      data: ItemData,
-      store: Store[F]
-  ): F[Map[Ident, PersonRef]] = {
-    val corrPersIds = data.metas
-      .map(_.proposals)
-      .appended(data.classifyProposals)
-      .flatMap(_.find(MetaProposalType.CorrPerson))
-      .flatMap(_.values.toList.map(_.ref.id))
-      .toSet
-    store
-      .transact(RPerson.findOrganization(corrPersIds))
-      .map(_.map(p => (p.id, p)).toMap)
-  }
-
-  def calcCandidateWeight(now: LocalDate, personRefs: Map[Ident, PersonRef])(
+  def calcCandidateWeight(now: LocalDate)(
       rm: RAttachmentMeta
   ): RAttachmentMeta = {
-    val list = rm.proposals.change(mp => mp.addWeights(weight(rm, mp, now, personRefs)))
+    val list = rm.proposals.change(mp => mp.addWeights(weight(rm, mp, now)))
     rm.copy(proposals = list.sortByWeights)
   }
 
   def weight(
       rm: RAttachmentMeta,
       mp: MetaProposal,
-      ref: LocalDate,
-      personRefs: Map[Ident, PersonRef]
+      ref: LocalDate
   )(
       cand: MetaProposal.Candidate
   ): Double =
@@ -79,27 +59,7 @@ object EvalProposals {
         val words = cand.origin.map(_.label.split(' ').length).max.toDouble
         val nerFac =
           cand.origin.map(label => nerTagFactor(label.tag, mp.proposalType)).min
-        val corrPerFac = corrOrgPersonFactor(rm, mp, personRefs, cand)
-        (1 / words) * (1 / tagCount) * positionWeight(pos, textLen) * nerFac * corrPerFac
-    }
-
-  def corrOrgPersonFactor(
-      rm: RAttachmentMeta,
-      mp: MetaProposal,
-      personRefs: Map[Ident, PersonRef],
-      cand: MetaProposal.Candidate
-  ): Double =
-    mp.proposalType match {
-      case MetaProposalType.CorrPerson =>
-        (for {
-          currentOrg <- rm.proposals
-            .find(MetaProposalType.CorrOrg)
-            .map(_.values.head.ref.id)
-          personOrg <- personRefs.get(cand.ref.id).flatMap(_.organization)
-          fac = if (currentOrg == personOrg) 0.5 else 1
-        } yield fac).getOrElse(1)
-      case _ =>
-        1
+        (1 / words) * (1 / tagCount) * positionWeight(pos, textLen) * nerFac
     }
 
   def positionWeight(pos: Int, total: Int): Double =

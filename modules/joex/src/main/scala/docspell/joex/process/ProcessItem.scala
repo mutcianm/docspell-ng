@@ -58,8 +58,7 @@ object ProcessItem {
   )(item: ItemData): Task[F, ProcessItemArgs, ItemData] =
     TextAnalysis[F](cfg.textAnalysis, analyser, regexNer, store)(item)
       .flatMap(FindProposal[F](cfg.textAnalysis, store))
-      .flatMap(EvalProposals[F](store))
-      .flatMap(CrossCheckProposals[F](store))
+      .flatMap(EvalProposals[F])
       .flatMap(SaveProposals[F](store))
 
   private def processAttachments0[F[_]: Async: Files](
