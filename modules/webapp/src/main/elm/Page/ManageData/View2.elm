@@ -11,10 +11,9 @@ import Comp.AddonArchiveManage
 import Comp.AddonRunConfigManage
 import Comp.BookmarkManage
 import Comp.CustomFieldManage
-import Comp.EquipmentManage
+import Comp.EntityManage
+import Comp.EntityTypeManage
 import Comp.FolderManage
-import Comp.OrgManage
-import Comp.PersonManage
 import Comp.TagManage
 import Data.Fields
 import Data.Flags exposing (Flags)
@@ -56,38 +55,26 @@ viewSidebar texts visible flags settings model =
                 ]
             , a
                 [ href "#"
-                , onClick (SetTab EquipTab)
-                , menuEntryActive model EquipTab
-                , class S.sidebarLink
-                ]
-                [ Icons.equipmentIcon ""
-                , span
-                    [ class "ml-3" ]
-                    [ text texts.basics.equipment
-                    ]
-                ]
-            , a
-                [ href "#"
-                , onClick (SetTab OrgTab)
-                , menuEntryActive model OrgTab
+                , onClick (SetTab EntityTab)
+                , menuEntryActive model EntityTab
                 , class S.sidebarLink
                 ]
                 [ Icons.organizationIcon ""
                 , span
                     [ class "ml-3" ]
-                    [ text texts.basics.organization
+                    [ text texts.entities
                     ]
                 ]
             , a
                 [ href "#"
-                , onClick (SetTab PersonTab)
-                , menuEntryActive model PersonTab
+                , onClick (SetTab EntityTypeTab)
+                , menuEntryActive model EntityTypeTab
                 , class S.sidebarLink
                 ]
-                [ Icons.personIcon ""
+                [ i [ class "fa fa-shapes" ] []
                 , span
                     [ class "ml-3" ]
-                    [ text texts.basics.person
+                    [ text texts.entityTypes
                     ]
                 ]
             , a
@@ -176,14 +163,11 @@ viewContent texts flags settings model =
             Just TagTab ->
                 viewTags texts settings model
 
-            Just EquipTab ->
-                viewEquip texts model
+            Just EntityTab ->
+                viewEntities texts model
 
-            Just OrgTab ->
-                viewOrg texts settings model
-
-            Just PersonTab ->
-                viewPerson texts settings model
+            Just EntityTypeTab ->
+                viewEntityTypes texts model
 
             Just FolderTab ->
                 viewFolder texts flags settings model
@@ -242,59 +226,33 @@ viewTags texts settings model =
     ]
 
 
-viewEquip : Texts -> Model -> List (Html Msg)
-viewEquip texts model =
-    [ h2
-        [ class S.header1
-        , class "inline-flex items-center"
-        ]
-        [ Icons.equipmentIcon ""
-        , div [ class "ml-2" ]
-            [ text texts.basics.equipment
-            ]
-        ]
-    , Html.map EquipManageMsg
-        (Comp.EquipmentManage.view2 texts.equipmentManage
-            model.equipManageModel
-        )
-    ]
-
-
-viewOrg : Texts -> UiSettings -> Model -> List (Html Msg)
-viewOrg texts settings model =
+viewEntities : Texts -> Model -> List (Html Msg)
+viewEntities texts model =
     [ h2
         [ class S.header1
         , class "inline-flex items-center"
         ]
         [ Icons.organizationIcon ""
         , div [ class "ml-2" ]
-            [ text texts.basics.organization
+            [ text texts.entities
             ]
         ]
-    , Html.map OrgManageMsg
-        (Comp.OrgManage.view2 texts.orgManage
-            settings
-            model.orgManageModel
-        )
+    , Html.map EntityMsg (Comp.EntityManage.view texts.entityManage model.entityModel)
     ]
 
 
-viewPerson : Texts -> UiSettings -> Model -> List (Html Msg)
-viewPerson texts settings model =
+viewEntityTypes : Texts -> Model -> List (Html Msg)
+viewEntityTypes texts model =
     [ h2
         [ class S.header1
         , class "inline-flex items-center"
         ]
-        [ Icons.personIcon ""
+        [ i [ class "fa fa-shapes" ] []
         , div [ class "ml-2" ]
-            [ text texts.basics.person
+            [ text texts.entityTypes
             ]
         ]
-    , Html.map PersonManageMsg
-        (Comp.PersonManage.view2 texts.personManage
-            settings
-            model.personManageModel
-        )
+    , Html.map EntityTypeMsg (Comp.EntityTypeManage.view texts.entityTypeManage model.entityTypeModel)
     ]
 
 

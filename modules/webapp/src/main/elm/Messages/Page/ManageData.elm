@@ -18,19 +18,17 @@ import Messages.Comp.AddonArchiveManage
 import Messages.Comp.AddonRunConfigManage
 import Messages.Comp.BookmarkManage
 import Messages.Comp.CustomFieldManage
-import Messages.Comp.EquipmentManage
+import Messages.Comp.EntityManage
+import Messages.Comp.EntityTypeManage
 import Messages.Comp.FolderManage
-import Messages.Comp.OrgManage
-import Messages.Comp.PersonManage
 import Messages.Comp.TagManage
 
 
 type alias Texts =
     { basics : Messages.Basics.Texts
     , tagManage : Messages.Comp.TagManage.Texts
-    , equipmentManage : Messages.Comp.EquipmentManage.Texts
-    , orgManage : Messages.Comp.OrgManage.Texts
-    , personManage : Messages.Comp.PersonManage.Texts
+    , entityManage : Messages.Comp.EntityManage.Texts
+    , entityTypeManage : Messages.Comp.EntityTypeManage.Texts
     , folderManage : Messages.Comp.FolderManage.Texts
     , customFieldManage : Messages.Comp.CustomFieldManage.Texts
     , bookmarkManage : Messages.Comp.BookmarkManage.Texts
@@ -40,6 +38,8 @@ type alias Texts =
     , bookmarks : String
     , addonArchives : String
     , addonRunConfigs : String
+    , entities : String
+    , entityTypes : String
     }
 
 
@@ -47,9 +47,8 @@ gb : TimeZone -> Texts
 gb tz =
     { basics = Messages.Basics.gb
     , tagManage = Messages.Comp.TagManage.gb
-    , equipmentManage = Messages.Comp.EquipmentManage.gb
-    , orgManage = Messages.Comp.OrgManage.gb
-    , personManage = Messages.Comp.PersonManage.gb
+    , entityManage = Messages.Comp.EntityManage.gb
+    , entityTypeManage = Messages.Comp.EntityTypeManage.gb
     , folderManage = Messages.Comp.FolderManage.gb tz
     , customFieldManage = Messages.Comp.CustomFieldManage.gb tz
     , bookmarkManage = Messages.Comp.BookmarkManage.gb
@@ -59,6 +58,8 @@ gb tz =
     , bookmarks = "Bookmarks"
     , addonArchives = "Addons"
     , addonRunConfigs = "Addon Run Configurations"
+    , entities = "Entities"
+    , entityTypes = "Types & Roles"
     }
 
 
@@ -66,9 +67,8 @@ de : TimeZone -> Texts
 de tz =
     { basics = Messages.Basics.de
     , tagManage = Messages.Comp.TagManage.de
-    , equipmentManage = Messages.Comp.EquipmentManage.de
-    , orgManage = Messages.Comp.OrgManage.de
-    , personManage = Messages.Comp.PersonManage.de
+    , entityManage = Messages.Comp.EntityManage.de
+    , entityTypeManage = Messages.Comp.EntityTypeManage.de
     , folderManage = Messages.Comp.FolderManage.de tz
     , customFieldManage = Messages.Comp.CustomFieldManage.de tz
     , bookmarkManage = Messages.Comp.BookmarkManage.de
@@ -78,6 +78,8 @@ de tz =
     , bookmarks = "Bookmarks"
     , addonArchives = "Addons"
     , addonRunConfigs = "Addon Run Configurations"
+    , entities = "Einträge"
+    , entityTypes = "Typen & Rollen"
     }
 
 
@@ -85,9 +87,8 @@ fr : TimeZone -> Texts
 fr tz =
     { basics = Messages.Basics.fr
     , tagManage = Messages.Comp.TagManage.fr
-    , equipmentManage = Messages.Comp.EquipmentManage.fr
-    , orgManage = Messages.Comp.OrgManage.fr
-    , personManage = Messages.Comp.PersonManage.fr
+    , entityManage = Messages.Comp.EntityManage.fr
+    , entityTypeManage = Messages.Comp.EntityTypeManage.fr
     , folderManage = Messages.Comp.FolderManage.fr tz
     , customFieldManage = Messages.Comp.CustomFieldManage.fr tz
     , bookmarkManage = Messages.Comp.BookmarkManage.fr
@@ -97,4 +98,6 @@ fr tz =
     , bookmarks = "Favoris"
     , addonArchives = "Addons"
     , addonRunConfigs = "Addon Run Configurations"
+    , entities = "Entrées"
+    , entityTypes = "Types et rôles"
     }

@@ -11,10 +11,9 @@ import Comp.AddonArchiveManage
 import Comp.AddonRunConfigManage
 import Comp.BookmarkManage
 import Comp.CustomFieldManage
-import Comp.EquipmentManage
+import Comp.EntityManage
+import Comp.EntityTypeManage
 import Comp.FolderManage
-import Comp.OrgManage
-import Comp.PersonManage
 import Comp.TagManage
 import Data.Flags exposing (Flags)
 import Data.UiSettings exposing (UiSettings)
@@ -33,14 +32,19 @@ update flags uiSettings msg model =
                 TagTab ->
                     update flags uiSettings (TagManageMsg Comp.TagManage.LoadTags) m
 
-                EquipTab ->
-                    update flags uiSettings (EquipManageMsg Comp.EquipmentManage.LoadEquipments) m
+                EntityTab ->
+                    let
+                        ( em, ec ) =
+                            Comp.EntityManage.init flags
+                    in
+                    ( { m | entityModel = em }, Cmd.map EntityMsg ec, Sub.none )
 
-                OrgTab ->
-                    update flags uiSettings (OrgManageMsg Comp.OrgManage.LoadOrgs) m
-
-                PersonTab ->
-                    update flags uiSettings (PersonManageMsg Comp.PersonManage.LoadPersons) m
+                EntityTypeTab ->
+                    let
+                        ( tm, tc ) =
+                            Comp.EntityTypeManage.init flags
+                    in
+                    ( { m | entityTypeModel = tm }, Cmd.map EntityTypeMsg tc, Sub.none )
 
                 FolderTab ->
                     let
@@ -84,26 +88,19 @@ update flags uiSettings msg model =
             in
             ( { model | tagManageModel = m2 }, Cmd.map TagManageMsg c2, Sub.none )
 
-        EquipManageMsg m ->
+        EntityMsg lm ->
             let
                 ( m2, c2 ) =
-                    Comp.EquipmentManage.update flags m model.equipManageModel
+                    Comp.EntityManage.update flags lm model.entityModel
             in
-            ( { model | equipManageModel = m2 }, Cmd.map EquipManageMsg c2, Sub.none )
+            ( { model | entityModel = m2 }, Cmd.map EntityMsg c2, Sub.none )
 
-        OrgManageMsg m ->
+        EntityTypeMsg lm ->
             let
                 ( m2, c2 ) =
-                    Comp.OrgManage.update flags m model.orgManageModel
+                    Comp.EntityTypeManage.update flags lm model.entityTypeModel
             in
-            ( { model | orgManageModel = m2 }, Cmd.map OrgManageMsg c2, Sub.none )
-
-        PersonManageMsg m ->
-            let
-                ( m2, c2 ) =
-                    Comp.PersonManage.update flags m model.personManageModel
-            in
-            ( { model | personManageModel = m2 }, Cmd.map PersonManageMsg c2, Sub.none )
+            ( { model | entityTypeModel = m2 }, Cmd.map EntityTypeMsg c2, Sub.none )
 
         FolderMsg lm ->
             let

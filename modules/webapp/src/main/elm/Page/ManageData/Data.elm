@@ -16,10 +16,9 @@ import Comp.AddonArchiveManage
 import Comp.AddonRunConfigManage
 import Comp.BookmarkManage
 import Comp.CustomFieldManage
-import Comp.EquipmentManage
+import Comp.EntityManage
+import Comp.EntityTypeManage
 import Comp.FolderManage
-import Comp.OrgManage
-import Comp.PersonManage
 import Comp.TagManage
 import Data.Flags exposing (Flags)
 
@@ -27,9 +26,8 @@ import Data.Flags exposing (Flags)
 type alias Model =
     { currentTab : Maybe Tab
     , tagManageModel : Comp.TagManage.Model
-    , equipManageModel : Comp.EquipmentManage.Model
-    , orgManageModel : Comp.OrgManage.Model
-    , personManageModel : Comp.PersonManage.Model
+    , entityModel : Comp.EntityManage.Model
+    , entityTypeModel : Comp.EntityTypeManage.Model
     , folderManageModel : Comp.FolderManage.Model
     , fieldManageModel : Comp.CustomFieldManage.Model
     , bookmarkModel : Comp.BookmarkManage.Model
@@ -55,9 +53,8 @@ init flags =
     in
     ( { currentTab = Just TagTab
       , tagManageModel = m2
-      , equipManageModel = Comp.EquipmentManage.emptyModel
-      , orgManageModel = Comp.OrgManage.emptyModel
-      , personManageModel = Comp.PersonManage.emptyModel
+      , entityModel = Tuple.first (Comp.EntityManage.init flags)
+      , entityTypeModel = Tuple.first (Comp.EntityTypeManage.init flags)
       , folderManageModel = Comp.FolderManage.empty
       , fieldManageModel = Comp.CustomFieldManage.empty
       , bookmarkModel = bm
@@ -75,9 +72,8 @@ init flags =
 
 type Tab
     = TagTab
-    | EquipTab
-    | OrgTab
-    | PersonTab
+    | EntityTab
+    | EntityTypeTab
     | FolderTab
     | CustomFieldTab
     | BookmarkTab
@@ -88,9 +84,8 @@ type Tab
 type Msg
     = SetTab Tab
     | TagManageMsg Comp.TagManage.Msg
-    | EquipManageMsg Comp.EquipmentManage.Msg
-    | OrgManageMsg Comp.OrgManage.Msg
-    | PersonManageMsg Comp.PersonManage.Msg
+    | EntityMsg Comp.EntityManage.Msg
+    | EntityTypeMsg Comp.EntityTypeManage.Msg
     | FolderMsg Comp.FolderManage.Msg
     | CustomFieldMsg Comp.CustomFieldManage.Msg
     | BookmarkMsg Comp.BookmarkManage.Msg
