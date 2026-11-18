@@ -40,6 +40,12 @@ object RItemEntity {
   def findByItem(itemId: Ident): ConnectionIO[Vector[RItemEntity]] =
     run(select(T.all), from(T), T.itemId === itemId).query[RItemEntity].to[Vector]
 
+  def findByRole(roleId: Ident): ConnectionIO[Vector[RItemEntity]] =
+    run(select(T.all), from(T), T.roleId === roleId).query[RItemEntity].to[Vector]
+
+  def deleteByItemAndRole(itemId: Ident, roleId: Ident): ConnectionIO[Int] =
+    DML.delete(T, T.itemId === itemId && T.roleId === roleId)
+
   def deleteByItem(itemId: Ident): ConnectionIO[Int] =
     DML.delete(T, T.itemId === itemId)
 

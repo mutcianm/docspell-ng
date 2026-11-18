@@ -45,6 +45,9 @@ object REntityAttr {
   def findByEntity(entityId: Ident): ConnectionIO[Vector[REntityAttr]] =
     run(select(T.all), from(T), T.entityId === entityId).query[REntityAttr].to[Vector]
 
+  def findByAttrDef(attrDefId: Ident): ConnectionIO[Vector[REntityAttr]] =
+    run(select(T.all), from(T), T.attrDefId === attrDefId).query[REntityAttr].to[Vector]
+
   def countByAttrDef(attrDefId: Ident): ConnectionIO[Int] =
     run(select(count(T.id)), from(T), T.attrDefId === attrDefId).query[Int].unique
 
