@@ -12,7 +12,7 @@ import docspell.backend.ops.OFolder.FolderOrder
 import docspell.backend.ops.OOrganization.{OrganizationOrder, PersonOrder}
 import docspell.backend.ops.OTag.TagOrder
 import docspell.common.ContactKind
-import docspell.common.{SearchMode, StatsProfile}
+import docspell.common.{Ident, SearchMode, StatsProfile}
 
 import org.http4s.ParseFailure
 import org.http4s.QueryParamDecoder
@@ -25,6 +25,9 @@ object QueryParam {
     QueryParamDecoder[String].emap(str =>
       ContactKind.fromString(str).left.map(s => ParseFailure(str, s))
     )
+
+  implicit val identDecoder: QueryParamDecoder[Ident] =
+    QueryParamDecoder[String].emap(str => Ident(str).left.map(s => ParseFailure(str, s)))
 
   implicit val queryStringDecoder: QueryParamDecoder[QueryString] =
     QueryParamDecoder[String].map(s => QueryString(s.trim.toLowerCase))
@@ -77,6 +80,8 @@ object QueryParam {
   object ContactKindOpt extends OptionalQueryParamDecoderMatcher[ContactKind]("kind")
 
   object QueryOpt extends OptionalQueryParamDecoderMatcher[QueryString]("q")
+
+  object EntityTypeOpt extends OptionalQueryParamDecoderMatcher[Ident]("type")
 
   object Query extends OptionalQueryParamDecoderMatcher[String]("q")
   object Limit extends OptionalQueryParamDecoderMatcher[Int]("limit")

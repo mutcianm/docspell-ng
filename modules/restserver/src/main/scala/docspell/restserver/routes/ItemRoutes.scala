@@ -52,6 +52,23 @@ object ItemRoutes {
                 .getOrElse(NotFound(BasicResult(success = false, "Not found.")))
           } yield resp
 
+        case GET -> Root / Ident(id) / "links" =>
+          backend.entities
+            .findItemLinks(user.account.collectiveId, id)
+            .flatMap(ls => Ok(ItemLinkList(ls.map(Conversions.mkItemLink).toList)))
+
+        case req @ PUT -> Root / Ident(id) / "links" / Ident(roleId) =>
+          for {
+            ids <- req.as[IdList]
+            res <- backend.entities.setItemLinks(
+              user.account.collectiveId,
+              id,
+              roleId,
+              ids.ids
+            )
+            resp <- Ok(EntityRoutes.basicResult(res))
+          } yield resp
+
         case POST -> Root / Ident(id) / "confirm" =>
           for {
             res <- backend.item.setState(
