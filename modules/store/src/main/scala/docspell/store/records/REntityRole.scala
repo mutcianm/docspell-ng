@@ -33,6 +33,14 @@ object REntityRole {
     val sender: Ident = Ident.unsafe("sender")
     val recipient: Ident = Ident.unsafe("recipient")
     val concerning: Ident = Ident.unsafe("concerning")
+
+    /** The other party of a document: who sent an incoming or received an outgoing one. */
+    def correspondent(d: Direction): Ident =
+      if (d == Direction.Incoming) sender else recipient
+
+    /** The collective's own side: who received an incoming or sent an outgoing document. */
+    def own(d: Direction): Ident =
+      if (d == Direction.Incoming) recipient else sender
   }
 
   final case class Table(alias: Option[String]) extends TableDef {

@@ -36,8 +36,9 @@ object SelectItems {
     store.transact(connStream)
   }
 
-  private val correspondent = Nel.of(REntityRole.Key.sender, REntityRole.Key.recipient)
-  private val concerning = Nel.of(REntityRole.Key.concerning)
+  private val correspondent = (d: Direction) => Nel.of(REntityRole.Key.correspondent(d))
+  private val own = (d: Direction) => Nel.of(REntityRole.Key.own(d))
+  private val concerning = (_: Direction) => Nel.of(REntityRole.Key.concerning)
 
   def forCorrOrg[F[_]](
       store: Store[F],
@@ -68,7 +69,7 @@ object SelectItems {
       maxTextLen: Int
   ): Stream[F, Data] =
     forLinkedEntity(store, collective, maxItems, maxTextLen)(
-      concerning,
+      own,
       REntityType.Key.person
     )
 
@@ -88,7 +89,7 @@ object SelectItems {
       collective: CollectiveId,
       maxItems: Int,
       maxTextLen: Int
-  )(roleKeys: Nel[Ident], typeKey: Ident): Stream[F, Data] = {
+  )(roleKeys: Direction => Nel[Ident], typeKey: Ident): Stream[F, Data] = {
     val connStream =
       allItems(collective, maxItems)
         .evalMap(item =>

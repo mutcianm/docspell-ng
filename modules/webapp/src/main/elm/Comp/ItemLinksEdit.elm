@@ -151,8 +151,8 @@ roleByKey key model =
     List.filter (\r -> r.key == Just key) model.roles |> List.head
 
 
-{-| Proposals per role id. Correspondent proposals belong to sender on incoming and to
-recipient on outgoing items.
+{-| Proposals per role id. Correspondent proposals belong to the other side (sender of
+incoming, recipient of outgoing items), concerning-person proposals to the own side.
 -}
 suggestions : ItemProposals -> Model -> Dict String (List IdName)
 suggestions props model =
@@ -164,6 +164,13 @@ suggestions props model =
             else
                 "recipient"
 
+        own =
+            if model.incoming then
+                "recipient"
+
+            else
+                "sender"
+
         forRole key values =
             case roleByKey key model of
                 Just r ->
@@ -173,7 +180,8 @@ suggestions props model =
                     []
     in
     (forRole corr (props.corrOrg ++ props.corrPerson)
-        ++ forRole "concerning" (props.concPerson ++ props.concEquipment)
+        ++ forRole own props.concPerson
+        ++ forRole "concerning" props.concEquipment
     )
         |> List.map (\( rid, vs ) -> ( rid, List.filter (\v -> not (List.member v.id (linkedIds rid model))) vs ))
         |> List.filter (\( _, vs ) -> not (List.isEmpty vs))

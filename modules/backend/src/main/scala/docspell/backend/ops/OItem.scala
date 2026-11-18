@@ -445,15 +445,13 @@ object OItem {
           store
             .transact(
               OptionT(RItem.findByIdAndCollective(item, collective)).semiflatMap { ri =>
-                val corr =
-                  if (ri.direction == Direction.Incoming) REntityRole.Key.sender
-                  else REntityRole.Key.recipient
+                val corr = REntityRole.Key.correspondent(ri.direction)
                 val target = kind match {
                   case MetaProposalType.CorrOrg =>
                     Some((corr, REntityType.Key.organization))
                   case MetaProposalType.CorrPerson => Some((corr, REntityType.Key.person))
                   case MetaProposalType.ConcPerson =>
-                    Some((REntityRole.Key.concerning, REntityType.Key.person))
+                    Some((REntityRole.Key.own(ri.direction), REntityType.Key.person))
                   case MetaProposalType.ConcEquip =>
                     Some((REntityRole.Key.concerning, REntityType.Key.equipment))
                   case _ => None

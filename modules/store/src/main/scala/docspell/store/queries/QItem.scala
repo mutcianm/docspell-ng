@@ -915,12 +915,13 @@ object QItem extends FtsSupport {
   def resolveTextAndLinkedEntity(
       collective: CollectiveId,
       itemId: Ident,
-      roleKeys: Nel[Ident],
+      roleKeys: Direction => Nel[Ident],
       typeKey: Ident,
       maxLen: Int,
       pageSep: String
   ): ConnectionIO[TextAndTag] =
     for {
+      dir <- RItem.findByIdAndCollective(itemId, collective).map(_.map(_.direction))
       texts <- Select(
         select(contentMax(maxLen)),
         from(i)
@@ -928,7 +929,9 @@ object QItem extends FtsSupport {
           .innerJoin(m, m.id === a.id),
         i.id === itemId && i.cid === collective && m.content.isNotNull && m.content <> ""
       ).orderBy(a.position.asc).build.query[String].to[List]
-      tag <- QEntity.firstLinked(itemId, collective, roleKeys, typeKey)
+      tag <- dir.flatTraverse(d =>
+        QEntity.firstLinked(itemId, collective, roleKeys(d), typeKey)
+      )
     } yield TextAndTag(
       itemId,
       texts.mkString(pageSep),

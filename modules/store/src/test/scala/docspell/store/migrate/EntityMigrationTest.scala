@@ -171,7 +171,7 @@ class EntityMigrationTest extends DatabaseTest {
         Set("street" -> "Main 1", "city" -> "Town", "phone" -> "12345")
       )
       assertEquals(o1Attrs, Set("shortname" -> "AC", "email" -> "info@acme.test"))
-      assertEquals(i1, Set("sender" -> "o1", "concerning" -> "p1", "concerning" -> "e1"))
+      assertEquals(i1, Set("sender" -> "o1", "recipient" -> "p1", "concerning" -> "e1"))
       assertEquals(i2, Set("recipient" -> "p1"))
       assertEquals(senderTargets.toSet, Set(person.id, org.id))
       assertEquals(concTargets, Vector.empty)

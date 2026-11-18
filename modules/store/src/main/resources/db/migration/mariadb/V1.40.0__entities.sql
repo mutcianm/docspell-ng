@@ -163,6 +163,9 @@ insert into `item_entity` (`id`, `item_id`, `entity_id`, `role_id`)
   select concat(i.`itemid`, '-', x.`k`), i.`itemid`, x.`eid`,
          case when x.`k` in ('corrorg', 'corrperson')
               then case when i.`incoming` then concat('role-sender-', i.`coll_id`) else concat('role-recipient-', i.`coll_id`) end
+              -- the concerning person is the collective's own side of the document
+              when x.`k` = 'concperson'
+              then case when i.`incoming` then concat('role-recipient-', i.`coll_id`) else concat('role-sender-', i.`coll_id`) end
               else concat('role-concerning-', i.`coll_id`) end
   from `item` i join (
     select `itemid`, 'corrorg' as `k`, `corrorg` as `eid` from `item` where `corrorg` is not null

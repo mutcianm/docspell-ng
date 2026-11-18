@@ -173,22 +173,20 @@ object QEntity {
   }
 
   /** Sets the item's corr/conc columns from its links: the first organization and person
-    * linked as sender (incoming) or recipient (outgoing), and the first person and
-    * equipment linked as concerning. Old read paths and the API's single-valued fields
-    * use these columns.
+    * on the other side (sender of incoming, recipient of outgoing items), the first
+    * person on the collective's own side, and the first equipment linked as concerning.
+    * Old read paths and the API's single-valued fields use these columns.
     */
   def refreshItemColumns(itemId: Ident, coll: CollectiveId): ConnectionIO[Int] =
     OptionT(RItem.findByIdAndCollective(itemId, coll))
       .semiflatMap { item =>
-        val corr = Nel.of(
-          if (item.direction == Direction.Incoming) REntityRole.Key.sender
-          else REntityRole.Key.recipient
-        )
+        val corr = Nel.of(REntityRole.Key.correspondent(item.direction))
+        val own = Nel.of(REntityRole.Key.own(item.direction))
         val conc = Nel.of(REntityRole.Key.concerning)
         for {
           org <- firstLinked(itemId, coll, corr, REntityType.Key.organization)
           person <- firstLinked(itemId, coll, corr, REntityType.Key.person)
-          concPerson <- firstLinked(itemId, coll, conc, REntityType.Key.person)
+          concPerson <- firstLinked(itemId, coll, own, REntityType.Key.person)
           concEquip <- firstLinked(itemId, coll, conc, REntityType.Key.equipment)
           n <- DML.update(
             RItem.T,

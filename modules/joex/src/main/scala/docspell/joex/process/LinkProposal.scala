@@ -79,9 +79,7 @@ object LinkProposal {
       value: Ident
   ): F[Int] = {
     val itemId = item.id
-    val correspondent =
-      if (item.direction == Direction.Incoming) REntityRole.Key.sender
-      else REntityRole.Key.recipient
+    val correspondent = REntityRole.Key.correspondent(item.direction)
     def link(roleKey: Ident): F[Int] =
       ctx.logger.debug(s"Linking item to ${value.id} as ${roleKey.id} ($mpt)") *>
         store.transact(
@@ -91,7 +89,9 @@ object LinkProposal {
     mpt match {
       case MetaProposalType.CorrOrg | MetaProposalType.CorrPerson =>
         link(correspondent)
-      case MetaProposalType.ConcPerson | MetaProposalType.ConcEquip =>
+      case MetaProposalType.ConcPerson =>
+        link(REntityRole.Key.own(item.direction))
+      case MetaProposalType.ConcEquip =>
         link(REntityRole.Key.concerning)
       case MetaProposalType.DocDate =>
         MetaProposal.parseDate(value) match {
