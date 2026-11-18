@@ -31,6 +31,9 @@ object ItemQueryGen {
       tagCatMatchExpr,
       customFieldMatchExprGen,
       customFieldIdMatchExprGen,
+      roleMatchExprGen,
+      roleIdMatchExprGen,
+      entityAttrMatchExprGen,
       fulltextExprGen,
       checksumMatchExprGen,
       attachIdExprGen,
@@ -228,6 +231,30 @@ object ItemQueryGen {
       op <- opGen
       value <- identGen
     } yield Expr.CustomFieldIdMatch(name, op, value)
+
+  private val entityNameGen: Gen[String] =
+    Gen.oneOf("sender", "recipient", "Concerning", "vehicle", "insured-object", "f_2")
+
+  val roleMatchExprGen: Gen[Expr.RoleMatch] =
+    for {
+      role <- entityNameGen
+      op <- opGen
+      value <- stringValueGen
+    } yield Expr.RoleMatch(role, op, value)
+
+  val roleIdMatchExprGen: Gen[Expr.RoleIdMatch] =
+    for {
+      role <- entityNameGen
+      ids <- nelGen(identGen)
+    } yield Expr.RoleIdMatch(role, ids)
+
+  val entityAttrMatchExprGen: Gen[Expr.EntityAttrMatch] =
+    for {
+      t <- entityNameGen
+      attr <- Gen.oneOf("plate", "idnumber", "year")
+      op <- opGen
+      value <- stringValueGen
+    } yield Expr.EntityAttrMatch(t, attr, op, value)
 
   val fulltextExprGen: Gen[Expr.Fulltext] =
     Gen

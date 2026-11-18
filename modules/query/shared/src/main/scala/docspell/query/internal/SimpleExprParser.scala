@@ -6,6 +6,7 @@
 
 package docspell.query.internal
 
+import cats.data.{NonEmptyList => Nel}
 import cats.parse.{Parser => P}
 
 import docspell.query.ItemQuery._
@@ -100,9 +101,35 @@ object SimpleExprParser {
     (P.ignoreCase(C.attachId) *> P.char(C.eqs) *> BasicParser.singleString)
       .map(Expr.AttachId.apply)
 
+  private[this] val entityName: P[String] =
+    P.charsWhile(BasicParser.nameChars.contains)
+
+  private[this] val unreservedName: P[String] =
+    entityName.flatMap(n => if (C.reserved.contains(n.toLowerCase)) P.fail else P.pure(n))
+
+  val roleIdExpr: P[Expr.RoleIdMatch] =
+    ((unreservedName <* P.ignoreCase(".id")) ~ P.eitherOr(
+      inOp *> BasicParser.stringOrMore,
+      P.char(C.eqs) *> BasicParser.singleString.map(Nel.one)
+    )).map { case (role, ids) => Expr.RoleIdMatch(role, ids.merge) }
+
+  val entityAttrExpr: P[Expr.EntityAttrMatch] =
+    ((unreservedName <* P.char('.')) ~ entityName ~ op ~ BasicParser.singleString)
+      .map { case (((t, attr), op), value) => Expr.EntityAttrMatch(t, attr, op, value) }
+
+  val roleExpr: P[Expr.RoleMatch] =
+    (unreservedName ~ op ~ BasicParser.singleString).map { case ((role, op), value) =>
+      Expr.RoleMatch(role, op, value)
+    }
+
+  // tried first and backtracking, so reserved names fall through to the fixed syntax
+  val entityExpr: P[Expr] =
+    P.oneOf(List(roleIdExpr.backtrack, entityAttrExpr.backtrack, roleExpr.backtrack))
+
   val simpleExpr: P[Expr] =
     P.oneOf(
       List(
+        entityExpr,
         dateExpr,
         stringExpr,
         existsExpr,

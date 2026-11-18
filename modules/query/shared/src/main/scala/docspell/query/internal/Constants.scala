@@ -46,6 +46,36 @@ object Constants {
   val tagId = "tag.id"
   val year = "year"
 
+  /** First name segments taken by the fixed syntax; roles and entity types cannot use
+    * them, since `<role>:` and `<type>.<attr>:` would be ambiguous.
+    */
+  val reserved: Set[String] = Set(
+    "attach",
+    cat,
+    checksum,
+    conc,
+    content,
+    corr,
+    created,
+    createdIn,
+    customField,
+    date,
+    dateIn,
+    due,
+    dueIn,
+    exist,
+    folder,
+    id,
+    inbox,
+    incoming,
+    name,
+    names,
+    notes,
+    source,
+    tag,
+    year
+  ).map(_.toLowerCase)
+
   // operators
   val eqs = '='
   val gt = '>'

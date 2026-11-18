@@ -97,6 +97,15 @@ object ExprString {
       case CustomFieldIdMatch(id, op, value) =>
         Right(s"${C.customFieldId}:$id${opStr(op)}${quote(value)}")
 
+      case RoleMatch(role, op, value) =>
+        Right(s"$role${opStr(op)}${quote(value)}")
+
+      case RoleIdMatch(role, ids) =>
+        Right(s"$role.id${C.in}${ids.map(quote).toList.mkString(",")}")
+
+      case EntityAttrMatch(t, attr, op, value) =>
+        Right(s"$t.$attr${opStr(op)}${quote(value)}")
+
       case ChecksumMatch(cs) =>
         Right(s"${C.checksum}${C.like}$cs")
 

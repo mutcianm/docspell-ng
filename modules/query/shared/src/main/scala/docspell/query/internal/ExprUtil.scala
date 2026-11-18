@@ -78,6 +78,12 @@ object ExprUtil {
         expr
       case CustomFieldIdMatch(_, _, _) =>
         expr
+      case RoleMatch(_, _, _) =>
+        expr
+      case RoleIdMatch(_, _) =>
+        expr
+      case EntityAttrMatch(_, _, _, _) =>
+        expr
       case ChecksumMatch(_) =>
         expr
       case AttachId(_) =>

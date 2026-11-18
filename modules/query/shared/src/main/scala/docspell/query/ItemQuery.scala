@@ -118,6 +118,20 @@ object ItemQuery {
     final case class CustomFieldIdMatch(id: String, op: Operator, value: String)
         extends Expr
 
+    /** Items linked under the role with this name to an entity whose name matches. */
+    final case class RoleMatch(role: String, op: Operator, value: String) extends Expr
+
+    /** Items linked under the role with this name to one of the entity ids. */
+    final case class RoleIdMatch(role: String, ids: Nel[String]) extends Expr
+
+    /** Items linked to an entity of this type whose attribute value matches. */
+    final case class EntityAttrMatch(
+        entityType: String,
+        attr: String,
+        op: Operator,
+        value: String
+    ) extends Expr
+
     final case class Fulltext(query: String) extends Expr
     final case class ChecksumMatch(checksum: String) extends Expr
     final case class AttachId(id: String) extends Expr
