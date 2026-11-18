@@ -10,6 +10,7 @@ module Comp.ItemDetail.EditForm exposing (formTabs, view2)
 import Comp.CustomFieldMultiInput
 import Comp.DatePicker
 import Comp.Dropdown
+import Comp.ItemLinksEdit
 import Comp.ItemDetail.FieldTabState as FTabState exposing (EditTab(..))
 import Comp.ItemDetail.Model
     exposing
@@ -289,96 +290,12 @@ formTabs texts flags settings model =
             ]
       }
     , { name = FTabState.tabName TabCorrespondent
-      , title = texts.basics.correspondent
+      , title = texts.linkedEntities
       , titleRight = []
       , info = Nothing
       , body =
-            [ optional [ Data.Fields.CorrOrg ] <|
-                div [ class "mb-4" ]
-                    [ label [ class S.inputLabel ]
-                        [ Icons.organizationIcon "mr-2"
-                        , text texts.basics.organization
-                        , addIconLink texts.addNewOrg StartCorrOrgModal
-                        , editIconLink texts.editOrg model.corrOrgModel StartEditCorrOrgModal
-                        ]
-                    , Html.map OrgDropdownMsg
-                        (Comp.Dropdown.view2
-                            (Comp.Dropdown.orgFormViewSettings texts.chooseOrg dds)
-                            settings
-                            model.corrOrgModel
-                        )
-                    , renderOrgSuggestions texts model
-                    ]
-            , optional [ Data.Fields.CorrPerson ] <|
-                div [ class "mb-4" ]
-                    [ label [ class S.inputLabel ]
-                        [ Icons.personIcon "mr-2"
-                        , text texts.basics.person
-                        , addIconLink texts.addNewCorrespondentPerson StartCorrPersonModal
-                        , editIconLink texts.editPerson
-                            model.corrPersonModel
-                            (StartEditPersonModal model.corrPersonModel)
-                        ]
-                    , Html.map CorrPersonMsg
-                        (Comp.Dropdown.view2 personCfg
-                            settings
-                            model.corrPersonModel
-                        )
-                    , renderCorrPersonSuggestions texts model
-                    , div
-                        [ classList
-                            [ ( "hidden", personMatchesOrg model )
-                            ]
-                        , class S.message
-                        , class "my-2"
-                        ]
-                        [ i [ class "fa fa-info mr-2 " ] []
-                        , text texts.personOrgInfo
-                        ]
-                    ]
-            ]
-      }
-    , { name = FTabState.tabName TabConcerning
-      , title = texts.basics.concerning
-      , titleRight = []
-      , info = Nothing
-      , body =
-            [ optional [ Data.Fields.ConcPerson ] <|
-                div [ class "mb-4" ]
-                    [ label [ class S.inputLabel ]
-                        [ Icons.personIcon "mr-2"
-                        , text texts.basics.person
-                        , addIconLink texts.addNewConcerningPerson StartConcPersonModal
-                        , editIconLink texts.editPerson
-                            model.concPersonModel
-                            (StartEditPersonModal model.concPersonModel)
-                        ]
-                    , Html.map ConcPersonMsg
-                        (Comp.Dropdown.view2
-                            personCfg
-                            settings
-                            model.concPersonModel
-                        )
-                    , renderConcPersonSuggestions texts model
-                    ]
-            , optional [ Data.Fields.ConcEquip ] <|
-                div [ class "mb-4" ]
-                    [ label [ class S.inputLabel ]
-                        [ Icons.equipmentIcon "mr-2"
-                        , text texts.basics.equipment
-                        , addIconLink texts.addNewEquipment StartEquipModal
-                        , editIconLink texts.editEquipment
-                            model.concEquipModel
-                            StartEditEquipModal
-                        ]
-                    , Html.map ConcEquipMsg
-                        (Comp.Dropdown.view2
-                            idNameCfg
-                            settings
-                            model.concEquipModel
-                        )
-                    , renderConcEquipSuggestions texts model
-                    ]
+            [ Html.map ItemLinksEditMsg
+                (Comp.ItemLinksEdit.view texts.itemLinks settings model.itemProposals model.linksModel)
             ]
       }
     , { name = FTabState.tabName TabDirection

@@ -51,6 +51,7 @@ import Comp.DetailEdit
 import Comp.Dropdown
 import Comp.Dropzone
 import Comp.ItemLinkForm
+import Comp.ItemLinksEdit
 import Comp.ItemMail
 import Comp.KeyInput
 import Comp.LinkTarget exposing (LinkTarget)
@@ -126,6 +127,7 @@ type alias Model =
     , viewMode : ViewMode
     , showQrModel : ShowQrModel
     , itemLinkModel : Comp.ItemLinkForm.Model
+    , linksModel : Comp.ItemLinksEdit.Model
     , showRunAddon : Bool
     , addonRunConfigDropdown : Comp.Dropdown.Model AddonRunConfig
     , addonRunSubmitted : Bool
@@ -266,6 +268,7 @@ emptyModel =
     , viewMode = SimpleView
     , showQrModel = initShowQrModel
     , itemLinkModel = Comp.ItemLinkForm.emptyModel
+    , linksModel = Comp.ItemLinksEdit.empty
     , showRunAddon = False
     , addonRunConfigDropdown = Comp.Dropdown.makeSingle
     , addonRunSubmitted = False
@@ -383,6 +386,7 @@ type Msg
     | SetNameMsg Comp.SimpleTextInput.Msg
     | ToggleSelectItem
     | ItemLinkFormMsg Comp.ItemLinkForm.Msg
+    | ItemLinksEditMsg Comp.ItemLinksEdit.Msg
     | ToggleShowRunAddon
     | LoadRunConfigResp (Result Http.Error AddonRunConfigList)
     | RunAddonMsg (Comp.Dropdown.Msg AddonRunConfig)

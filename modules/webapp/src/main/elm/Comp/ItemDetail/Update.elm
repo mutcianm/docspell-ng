@@ -47,6 +47,7 @@ import Comp.ItemDetail.Model
         , resultModelCmdSub
         )
 import Comp.ItemLinkForm
+import Comp.ItemLinksEdit
 import Comp.ItemMail
 import Comp.KeyInput
 import Comp.LinkTarget
@@ -300,6 +301,9 @@ update inav env msg model =
                 ( ilm, ilc ) =
                     Comp.ItemLinkForm.init env.flags item.id
 
+                ( lem, lec ) =
+                    Comp.ItemLinksEdit.init env.flags
+
                 lastModel =
                     res9.model
             in
@@ -321,6 +325,7 @@ update inav env msg model =
                     , visibleAttach = 0
                     , modalEdit = Nothing
                     , itemLinkModel = ilm
+                    , linksModel = Comp.ItemLinksEdit.setItem item.id (item.direction == "incoming") item.links lem
                 }
             , cmd =
                 Cmd.batch
@@ -339,6 +344,7 @@ update inav env msg model =
                     , Api.getPersons env.flags "" Data.PersonOrder.NameAsc GetPersonResp
                     , Cmd.map CustomFieldMsg (Comp.CustomFieldMultiInput.initCmd env.flags)
                     , Cmd.map ItemLinkFormMsg ilc
+                    , Cmd.map ItemLinksEditMsg lec
                     ]
             , sub =
                 Sub.batch
@@ -1720,6 +1726,13 @@ update inav env msg model =
                 , Cmd.map ItemLinkFormMsg ilc
                 , Sub.map ItemLinkFormMsg ils
                 )
+
+        ItemLinksEditMsg lm ->
+            let
+                ( lem, lec ) =
+                    Comp.ItemLinksEdit.update env.flags lm model.linksModel
+            in
+            resultModelCmd ( { model | linksModel = lem }, Cmd.map ItemLinksEditMsg lec )
 
         ToggleShowRunAddon ->
             resultModel { model | showRunAddon = not model.showRunAddon, mobileItemMenuOpen = False }
