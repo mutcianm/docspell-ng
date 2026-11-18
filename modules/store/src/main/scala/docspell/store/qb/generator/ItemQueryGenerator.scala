@@ -168,6 +168,23 @@ object ItemQueryGenerator {
       case Expr.CustomFieldIdMatch(field, op, value) =>
         tables.item.id.in(itemsWithCustomField(_.id ==== field)(coll, makeOp(op), value))
 
+      case Expr.RoleMatch(role, op, value) =>
+        val cmp = op match {
+          case Operator.Like => (_: REntity.Table).name.like(QueryWildcard.lower(value))
+          case _ => (e: REntity.Table) => Condition.CompareVal(e.name, makeOp(op), value)
+        }
+        tables.item.id.in(itemsLinkedUnderRole(coll, role)(cmp))
+
+      case Expr.RoleIdMatch(role, ids) =>
+        tables.item.id.in(
+          itemsLinkedUnderRole(coll, role)(e =>
+            or(e.id ==== ids.head, ids.tail.map(e.id ==== _): _*)
+          )
+        )
+
+      case Expr.EntityAttrMatch(entityType, attr, op, value) =>
+        tables.item.id.in(itemsWithEntityAttr(coll, entityType, attr, makeOp(op), value))
+
       case Expr.ChecksumMatch(checksum) =>
         val select = QItem.findByChecksumQuery(checksum, coll, Set.empty)
         tables.item.id.in(select.withSelect(Nel.of(RItem.as("i").id.s)))
@@ -271,6 +288,50 @@ object ItemQueryGenerator {
       case Operator.Lte =>
         QOp.Lte
     }
+
+  private def itemsLinkedUnderRole(coll: CollectiveId, role: String)(
+      entityCond: REntity.Table => Condition
+  ): Select = {
+    val ie = RItemEntity.as("ie")
+    val r = REntityRole.as("r")
+    val e = REntity.as("e")
+    Select(
+      select(ie.itemId),
+      from(ie)
+        .innerJoin(r, r.id === ie.roleId)
+        .innerJoin(e, e.id === ie.entityId),
+      r.cid === coll && r.name.lowerEqA(Ident.unsafe(role.toLowerCase)) && entityCond(e)
+    )
+  }
+
+  private def itemsWithEntityAttr(
+      coll: CollectiveId,
+      entityType: String,
+      attr: String,
+      op: QOp,
+      value: String
+  ): Select = {
+    val ie = RItemEntity.as("ie")
+    val e = REntity.as("e")
+    val t = REntityType.as("t")
+    val d = RAttrDef.as("d")
+    val a = REntityAttr.as("a")
+    val v = if (op == QOp.LowerLike) QueryWildcard.lower(value) else value
+    Select(
+      select(ie.itemId),
+      from(ie)
+        .innerJoin(e, e.id === ie.entityId)
+        .innerJoin(t, t.id === e.typeId)
+        .innerJoin(d, d.typeId === t.id)
+        .innerJoin(a, a.entityId === e.id && a.attrDefId === d.id),
+      t.cid === coll && t.name.lowerEqA(Ident.unsafe(entityType.toLowerCase)) &&
+        d.name.lowerEqA(Ident.unsafe(attr.toLowerCase)) && Condition.CompareVal(
+          a.value,
+          op,
+          v
+        )
+    )
+  }
 
   private def itemsWithCustomField(
       sel: RCustomField.Table => Condition
