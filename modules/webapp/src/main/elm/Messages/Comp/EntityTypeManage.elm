@@ -35,6 +35,7 @@ type alias Texts =
     , acceptsInfo : String
     , anyType : String
     , label : String
+    , labelInfo : String
     , nameInfo : String
     , attrNameInfo : String
     , format : String
@@ -84,6 +85,7 @@ gb =
     , acceptsInfo = "The types of entities this role can link. None selected means any type."
     , anyType = "any type"
     , label = "Label"
+    , labelInfo = "Shown in the app instead of the name. Can contain spaces and any characters; leave empty to show the name."
     , nameInfo = "Used in search queries, like sender:acme. No dots and no search keywords."
     , attrNameInfo = "Used in search queries, like vehicle.plate:AB*. No dots."
     , format = "Format"
@@ -133,6 +135,7 @@ de =
     , acceptsInfo = "Die Typen, die mit dieser Rolle verknüpft werden können. Keine Auswahl erlaubt alle Typen."
     , anyType = "alle Typen"
     , label = "Bezeichnung"
+    , labelInfo = "Wird in der Anwendung statt des Namens angezeigt. Darf Leerzeichen und beliebige Zeichen enthalten; leer lassen, um den Namen anzuzeigen."
     , nameInfo = "Wird in Suchanfragen verwendet, z.B. sender:acme. Keine Punkte und keine Suchbegriffe."
     , attrNameInfo = "Wird in Suchanfragen verwendet, z.B. vehicle.plate:AB*. Keine Punkte."
     , format = "Format"
@@ -182,6 +185,7 @@ fr =
     , acceptsInfo = "Les types que ce rôle peut lier. Aucune sélection accepte tous les types."
     , anyType = "tous les types"
     , label = "Libellé"
+    , labelInfo = "Affiché dans l'application à la place du nom. Peut contenir des espaces et tout caractère ; laisser vide pour afficher le nom."
     , nameInfo = "Utilisé dans les recherches, par ex. sender:acme. Sans points ni mots-clés de recherche."
     , attrNameInfo = "Utilisé dans les recherches, par ex. vehicle.plate:AB*. Sans points."
     , format = "Format"

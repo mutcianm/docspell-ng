@@ -663,6 +663,7 @@ labelInput texts v =
     div [ class "mb-4" ]
         [ label [ class S.inputLabel, for "et-label" ] [ text texts.label ]
         , input [ type_ "text", id "et-label", onInput SetLabel, value v, class S.textInput ] []
+        , div [ class "opacity-75 text-sm" ] [ text texts.labelInfo ]
         ]
 
 
