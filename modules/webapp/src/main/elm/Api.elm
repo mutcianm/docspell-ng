@@ -7,6 +7,23 @@
 
 module Api exposing
     ( addBookmark
+    , getEntityTypes
+    , postEntityType
+    , putEntityType
+    , deleteEntityType
+    , postAttrDef
+    , putAttrDef
+    , deleteAttrDef
+    , getEntityRoles
+    , postEntityRole
+    , putEntityRole
+    , deleteEntityRole
+    , getEntities
+    , postEntity
+    , putEntity
+    , deleteEntity
+    , getItemLinks
+    , setItemLinks
     , addConcEquip
     , addConcPerson
     , addCorrOrg
@@ -252,6 +269,14 @@ import Api.Model.FolderDetail exposing (FolderDetail)
 import Api.Model.FolderList exposing (FolderList)
 import Api.Model.GenInvite exposing (GenInvite)
 import Api.Model.IdList exposing (IdList)
+import Api.Model.EntityList exposing (EntityList)
+import Api.Model.EntityRoleList exposing (EntityRoleList)
+import Api.Model.EntityTypeList exposing (EntityTypeList)
+import Api.Model.ItemLinkList exposing (ItemLinkList)
+import Api.Model.NewAttrDef exposing (NewAttrDef)
+import Api.Model.NewEntity exposing (NewEntity)
+import Api.Model.NewEntityRole exposing (NewEntityRole)
+import Api.Model.NewEntityType exposing (NewEntityType)
 import Api.Model.IdResult exposing (IdResult)
 import Api.Model.ImapSettings exposing (ImapSettings)
 import Api.Model.ImapSettingsList exposing (ImapSettingsList)
@@ -454,6 +479,177 @@ deleteCustomField flags id receive =
     Http2.authDelete
         { url = flags.config.baseUrl ++ "/api/v1/sec/customfield/" ++ id
         , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+
+--- Entities
+
+
+getEntityTypes : Flags -> (Result Http.Error EntityTypeList -> msg) -> Cmd msg
+getEntityTypes flags receive =
+    Http2.authGet
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype"
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.EntityTypeList.decoder
+        }
+
+
+postEntityType : Flags -> NewEntityType -> (Result Http.Error IdResult -> msg) -> Cmd msg
+postEntityType flags data receive =
+    Http2.authPost
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype"
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewEntityType.encode data)
+        , expect = Http.expectJson receive Api.Model.IdResult.decoder
+        }
+
+
+putEntityType : Flags -> String -> NewEntityType -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+putEntityType flags id data receive =
+    Http2.authPut
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype/" ++ id
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewEntityType.encode data)
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+deleteEntityType : Flags -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+deleteEntityType flags id receive =
+    Http2.authDelete
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype/" ++ id
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+postAttrDef : Flags -> String -> NewAttrDef -> (Result Http.Error IdResult -> msg) -> Cmd msg
+postAttrDef flags typeId data receive =
+    Http2.authPost
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype/" ++ typeId ++ "/attr"
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewAttrDef.encode data)
+        , expect = Http.expectJson receive Api.Model.IdResult.decoder
+        }
+
+
+putAttrDef : Flags -> String -> String -> NewAttrDef -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+putAttrDef flags typeId attrId data receive =
+    Http2.authPut
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype/" ++ typeId ++ "/attr/" ++ attrId
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewAttrDef.encode data)
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+deleteAttrDef : Flags -> String -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+deleteAttrDef flags typeId attrId receive =
+    Http2.authDelete
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entitytype/" ++ typeId ++ "/attr/" ++ attrId
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+getEntityRoles : Flags -> (Result Http.Error EntityRoleList -> msg) -> Cmd msg
+getEntityRoles flags receive =
+    Http2.authGet
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entityrole"
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.EntityRoleList.decoder
+        }
+
+
+postEntityRole : Flags -> NewEntityRole -> (Result Http.Error IdResult -> msg) -> Cmd msg
+postEntityRole flags data receive =
+    Http2.authPost
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entityrole"
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewEntityRole.encode data)
+        , expect = Http.expectJson receive Api.Model.IdResult.decoder
+        }
+
+
+putEntityRole : Flags -> String -> NewEntityRole -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+putEntityRole flags id data receive =
+    Http2.authPut
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entityrole/" ++ id
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewEntityRole.encode data)
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+deleteEntityRole : Flags -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+deleteEntityRole flags id receive =
+    Http2.authDelete
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entityrole/" ++ id
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+getEntities : Flags -> String -> String -> (Result Http.Error EntityList -> msg) -> Cmd msg
+getEntities flags typeId query receive =
+    Http2.authGet
+        { url =
+            flags.config.baseUrl
+                ++ "/api/v1/sec/entity?type="
+                ++ Url.percentEncode typeId
+                ++ "&q="
+                ++ Url.percentEncode query
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.EntityList.decoder
+        }
+
+
+postEntity : Flags -> NewEntity -> (Result Http.Error IdResult -> msg) -> Cmd msg
+postEntity flags data receive =
+    Http2.authPost
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entity"
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewEntity.encode data)
+        , expect = Http.expectJson receive Api.Model.IdResult.decoder
+        }
+
+
+putEntity : Flags -> String -> NewEntity -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+putEntity flags id data receive =
+    Http2.authPut
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entity/" ++ id
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.NewEntity.encode data)
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+deleteEntity : Flags -> String -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+deleteEntity flags id receive =
+    Http2.authDelete
+        { url = flags.config.baseUrl ++ "/api/v1/sec/entity/" ++ id
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.BasicResult.decoder
+        }
+
+
+getItemLinks : Flags -> String -> (Result Http.Error ItemLinkList -> msg) -> Cmd msg
+getItemLinks flags item receive =
+    Http2.authGet
+        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/links"
+        , account = getAccount flags
+        , expect = Http.expectJson receive Api.Model.ItemLinkList.decoder
+        }
+
+
+setItemLinks : Flags -> String -> String -> IdList -> (Result Http.Error BasicResult -> msg) -> Cmd msg
+setItemLinks flags item roleId ids receive =
+    Http2.authPut
+        { url = flags.config.baseUrl ++ "/api/v1/sec/item/" ++ item ++ "/links/" ++ roleId
+        , account = getAccount flags
+        , body = Http.jsonBody (Api.Model.IdList.encode ids)
         , expect = Http.expectJson receive Api.Model.BasicResult.decoder
         }
 
