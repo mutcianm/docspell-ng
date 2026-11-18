@@ -21,6 +21,7 @@ import docspell.common._
 import docspell.pubsub.naive.NaivePubSub
 import docspell.restserver.http4s.InternalHeader
 import docspell.restserver.ws.OutputEvent
+import docspell.restserver.webapp.DocsRoutes
 import docspell.restserver.ws.OutputEvent.KeepAlive
 import docspell.store.Store
 import docspell.store.records.RInternalSetting
@@ -124,7 +125,7 @@ object RestServer {
         internalRoutes(pubSub)
       }
     )
-    val httpApp = (internal <+> restApp.routes(wsB)).orNotFound
+    val httpApp = (internal <+> restApp.routes(wsB) <+> DocsRoutes[F]).orNotFound
       .mapF(
         _.attempt
           .flatMap { eab =>
