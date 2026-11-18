@@ -11,8 +11,9 @@ import cats.effect.{Async, Resource}
 import cats.implicits._
 
 import docspell.common._
-import docspell.store.records.{REquipment, RItem}
-import docspell.store.{AddResult, Store}
+import docspell.store.queries.QLegacyEntity
+import docspell.store.records.REquipment
+import docspell.store.Store
 
 trait OEquipment[F[_]] {
 
@@ -24,11 +25,6 @@ trait OEquipment[F[_]] {
 
   def find(collectiveId: CollectiveId, id: Ident): F[Option[REquipment]]
 
-  def add(s: REquipment): F[AddResult]
-
-  def update(s: REquipment): F[AddResult]
-
-  def delete(id: Ident, collective: CollectiveId): F[AddResult]
 }
 
 object OEquipment {
@@ -55,6 +51,7 @@ object OEquipment {
     }
   }
 
+  // entities are the source; these are read-only views in the former shape (#24)
   def apply[F[_]: Async](store: Store[F]): Resource[F, OEquipment[F]] =
     Resource.pure[F, OEquipment[F]](new OEquipment[F] {
       def findAll(
@@ -62,35 +59,12 @@ object OEquipment {
           nameQuery: Option[String],
           order: EquipmentOrder
       ): F[Vector[REquipment]] =
-        store.transact(
-          REquipment.findAll(collective, nameQuery, EquipmentOrder(order))
-        )
+        store.transact(QLegacyEntity.equipments(collective, nameQuery)).map { all =>
+          val asc = all.sortBy(_.name.toLowerCase)
+          if (order == EquipmentOrder.NameDesc) asc.reverse else asc
+        }
 
       def find(cid: CollectiveId, id: Ident): F[Option[REquipment]] =
-        store.transact(REquipment.findById(id)).map(_.filter(_.cid == cid))
-
-      def add(e: REquipment): F[AddResult] = {
-        def insert = REquipment.insert(e)
-        def exists = REquipment.existsByName(e.cid, e.name)
-
-        val msg = s"An equipment '${e.name}' already exists"
-        store.add(insert, exists).map(_.fold(identity, _.withMsg(msg), identity))
-      }
-
-      def update(e: REquipment): F[AddResult] = {
-        def insert = REquipment.update(e)
-        def exists = REquipment.existsByName(e.cid, e.name)
-
-        val msg = s"An equipment '${e.name}' already exists"
-        store.add(insert, exists).map(_.fold(identity, _.withMsg(msg), identity))
-      }
-
-      def delete(id: Ident, collective: CollectiveId): F[AddResult] = {
-        val io = for {
-          n0 <- RItem.removeConcEquip(collective, id)
-          n1 <- REquipment.delete(id, collective)
-        } yield n0 + n1
-        store.transact(io).attempt.map(AddResult.fromUpdate)
-      }
+        findAll(cid, None, EquipmentOrder.NameAsc).map(_.find(_.eid == id))
     })
 }

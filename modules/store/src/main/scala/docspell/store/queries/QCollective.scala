@@ -19,47 +19,11 @@ import doobie.implicits._
 object QCollective {
   private val ti = RTagItem.as("ti")
   private val t = RTag.as("t")
-  private val ro = ROrganization.as("o")
-  private val rp = RPerson.as("p")
-  private val re = REquipment.as("e")
-  private val rc = RContact.as("c")
   private val i = RItem.as("i")
 
   case class Names(org: Vector[String], pers: Vector[String], equip: Vector[String])
   object Names {
     val empty = Names(Vector.empty, Vector.empty, Vector.empty)
-  }
-
-  def allNames(collective: CollectiveId, maxEntries: Int): ConnectionIO[Names] = {
-    val created = Column[Timestamp]("created", TableDef(""))
-    union(
-      Select(
-        select(ro.name.s, lit("1").as("kind"), ro.created.as(created)),
-        from(ro),
-        ro.cid === collective
-      ),
-      Select(
-        select(rp.name.s, lit("2").as("kind"), rp.created.as(created)),
-        from(rp),
-        rp.cid === collective
-      ),
-      Select(
-        select(re.name.s, lit("3").as("kind"), re.created.as(created)),
-        from(re),
-        re.cid === collective
-      )
-    ).orderBy(created.desc)
-      .limit(Batch.limit(maxEntries))
-      .build
-      .query[(String, Int)]
-      .streamWithChunkSize(maxEntries)
-      .fold(Names.empty) { case (names, (name, kind)) =>
-        if (kind == 1) names.copy(org = names.org :+ name)
-        else if (kind == 2) names.copy(pers = names.pers :+ name)
-        else names.copy(equip = names.equip :+ name)
-      }
-      .compile
-      .lastOrError
   }
 
   case class InsightData(
@@ -135,16 +99,6 @@ object QCollective {
       coll: CollectiveId,
       query: Option[String],
       kind: Option[ContactKind]
-  ): Stream[ConnectionIO, RContact] = {
-    val orgCond = Select(select(ro.oid), from(ro), ro.cid === coll)
-    val persCond = Select(select(rp.pid), from(rp), rp.cid === coll)
-    val valueFilter = query.map(s => rc.value.like(s"%${s.toLowerCase}%"))
-    val kindFilter = kind.map(k => rc.kind === k)
-
-    Select(
-      select(rc.all),
-      from(rc),
-      (rc.orgId.in(orgCond) || rc.personId.in(persCond)) &&? valueFilter &&? kindFilter
-    ).orderBy(rc.value).build.query[RContact].stream
-  }
+  ): Stream[ConnectionIO, RContact] =
+    Stream.evals(QLegacyEntity.contactsOf(coll, query, kind))
 }

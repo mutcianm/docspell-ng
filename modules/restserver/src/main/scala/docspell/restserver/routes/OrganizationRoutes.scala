@@ -19,7 +19,6 @@ import docspell.restserver.conv.Conversions._
 import docspell.restserver.http4s.QueryParam
 
 import org.http4s.HttpRoutes
-import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
 import org.http4s.dsl.Http4sDsl
 
@@ -51,28 +50,6 @@ object OrganizationRoutes {
             )
             resp <- Ok(ReferenceList(data.map(mkIdName).toList))
           } yield resp
-
-      case req @ POST -> Root =>
-        for {
-          data <- req.as[Organization]
-          newOrg <- newOrg(data, user.account.collectiveId)
-          added <- backend.organization.addOrg(newOrg)
-          resp <- Ok(basicResult(added, "New organization saved."))
-        } yield resp
-
-      case req @ PUT -> Root =>
-        for {
-          data <- req.as[Organization]
-          upOrg <- changeOrg(data, user.account.collectiveId)
-          update <- backend.organization.updateOrg(upOrg)
-          resp <- Ok(basicResult(update, "Organization updated."))
-        } yield resp
-
-      case DELETE -> Root / Ident(id) =>
-        for {
-          delOrg <- backend.organization.deleteOrg(id, user.account.collectiveId)
-          resp <- Ok(basicResult(delOrg, "Organization deleted."))
-        } yield resp
 
       case GET -> Root / Ident(id) =>
         (for {

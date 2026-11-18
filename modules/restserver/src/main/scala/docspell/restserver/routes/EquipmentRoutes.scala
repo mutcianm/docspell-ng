@@ -19,7 +19,6 @@ import docspell.restserver.conv.Conversions._
 import docspell.restserver.http4s.QueryParam
 
 import org.http4s.HttpRoutes
-import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
 import org.http4s.dsl.Http4sDsl
 
@@ -38,28 +37,6 @@ object EquipmentRoutes {
             sort.getOrElse(OEquipment.EquipmentOrder.NameAsc)
           )
           resp <- Ok(EquipmentList(data.map(mkEquipment).toList))
-        } yield resp
-
-      case req @ POST -> Root =>
-        for {
-          data <- req.as[Equipment]
-          equip <- newEquipment(data, user.account.collectiveId)
-          res <- backend.equipment.add(equip)
-          resp <- Ok(basicResult(res, "Equipment created"))
-        } yield resp
-
-      case req @ PUT -> Root =>
-        for {
-          data <- req.as[Equipment]
-          equip <- changeEquipment(data, user.account.collectiveId)
-          res <- backend.equipment.update(equip)
-          resp <- Ok(basicResult(res, "Equipment updated."))
-        } yield resp
-
-      case DELETE -> Root / Ident(id) =>
-        for {
-          del <- backend.equipment.delete(id, user.account.collectiveId)
-          resp <- Ok(basicResult(del, "Equipment deleted."))
         } yield resp
 
       case GET -> Root / Ident(id) =>
