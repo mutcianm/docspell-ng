@@ -1293,7 +1293,10 @@ tabLook settings selectedItems model tab =
 
         TabCorrespondent ->
             hiddenOr [ Data.Fields.CorrOrg, Data.Fields.CorrPerson ] <|
-                if Comp.RoleSearch.isEmpty model.roleSearch then
+                if not (Comp.RoleSearch.hasRoles model.roleSearch) then
+                    Comp.Tabs.Hidden
+
+                else if Comp.RoleSearch.isEmpty model.roleSearch then
                     Comp.Tabs.Normal
 
                 else

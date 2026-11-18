@@ -9,6 +9,7 @@ module Comp.RoleSearch exposing
     ( Model
     , Msg
     , empty
+    , hasRoles
     , init
     , isChangeMsg
     , isEmpty
@@ -88,6 +89,13 @@ isChangeMsg msg =
 selected : String -> Model -> List Entity
 selected roleId model =
     Dict.get roleId model.pickers |> Maybe.map Comp.Dropdown.getSelected |> Maybe.withDefault []
+
+
+{-| False where roles cannot be loaded, e.g. on share pages.
+-}
+hasRoles : Model -> Bool
+hasRoles model =
+    not (List.isEmpty model.roles)
 
 
 isEmpty : Model -> Bool
