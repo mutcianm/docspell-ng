@@ -6,7 +6,7 @@
 
 package docspell.store.queries
 
-import cats.data.{NonEmptyList => Nel}
+import cats.data.{NonEmptyList => Nel, OptionT}
 import cats.implicits._
 
 import docspell.common._
@@ -78,6 +78,47 @@ object QEntity {
         .innerJoin(e, e.id === ie.entityId),
       ie.itemId === itemId && e.cid === coll
     ).orderBy(r.name.asc, e.name.asc).build.query[ItemLink].to[Vector]
+
+  /** Links the entity under the role with the given key, replacing links of that role to
+    * entities of the same type. Returns 0 if the role or entity does not exist.
+    */
+  def replaceLinkOfType(
+      itemId: Ident,
+      coll: CollectiveId,
+      roleKey: Ident,
+      entityId: Ident
+  ): ConnectionIO[Int] =
+    (for {
+      role <- OptionT(REntityRole.findByKey(roleKey, coll))
+      entity <- OptionT(REntity.findById(entityId, coll))
+      sameType = Select(select(e.id), from(e), e.typeId === entity.typeId)
+      _ <- OptionT.liftF(
+        DML.delete(
+          RItemEntity.T,
+          RItemEntity.T.itemId === itemId && RItemEntity.T.roleId === role.id &&
+            RItemEntity.T.entityId.in(sameType)
+        )
+      )
+      id <- OptionT.liftF(Ident.randomId[ConnectionIO])
+      n <- OptionT.liftF(RItemEntity.insert(RItemEntity(id, itemId, entityId, role.id)))
+    } yield n).getOrElse(0)
+
+  def firstLinked(
+      itemId: Ident,
+      coll: CollectiveId,
+      roleKeys: Nel[Ident],
+      typeKey: Ident
+  ): ConnectionIO[Option[IdRef]] = {
+    val t = REntityType.as("t")
+    Select(
+      select(e.id, e.name),
+      from(ie)
+        .innerJoin(r, r.id === ie.roleId)
+        .innerJoin(e, e.id === ie.entityId)
+        .innerJoin(t, t.id === e.typeId),
+      ie.itemId === itemId && r.cid === coll && r.key.in(roleKeys) && t.key === typeKey
+    ).orderBy(e.name.asc).limit(1).build.query[IdRef].option
+  }
 
   def countEntitiesOfType(typeId: Ident): ConnectionIO[Int] =
     run(select(count(e.id)), from(e), e.typeId === typeId).query[Int].unique
