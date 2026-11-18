@@ -137,6 +137,9 @@ trait DoobieMeta extends EmilDoobieMeta {
   implicit val metaEquipUse: Meta[EquipmentUse] =
     Meta[String].timap(EquipmentUse.unsafeFromString)(_.name)
 
+  implicit val metaEntityMatcher: Meta[EntityMatcher] =
+    Meta[String].timap(EntityMatcher.unsafeFromString)(_.name)
+
   implicit val metaOrgUse: Meta[OrgUse] =
     Meta[String].timap(OrgUse.unsafeFromString)(_.name)
 
