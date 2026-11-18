@@ -919,6 +919,8 @@ val restserver = project
             (LocalProject("website") / zolaPrepare).value
           )
           val built = target.value / "docs-site"
+          // zola refuses to build into an existing directory
+          IO.delete(built)
           // root-relative links: the docs are served from the server root, next to /app
           ZolaPlugin.buildSite(
             (LocalProject("website") / zolaCommand).value,
